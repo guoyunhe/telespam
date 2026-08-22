@@ -58,10 +58,11 @@ export class Telespam {
   async #handleRequest(req: ChatJoinRequest): Promise<void> {
     const { id: chatId } = req.chat;
     const { id: userId } = req.from;
+    const userName = req.from.first_name || `user ${userId}`;
 
     if (this.#requireProfilePhoto && !(await this.#hasProfilePhoto(userId))) {
       await this.#bot.api.declineChatJoinRequest(chatId, userId);
-      console.log(`Declined user ${userId}: no profile photo`);
+      await this.#notifyDecline(chatId, userId, userName, 'no profile photo');
       return;
     }
 
@@ -80,5 +81,35 @@ export class Telespam {
     } catch {
       return false;
     }
+  }
+
+  async #notifyDecline(
+    chatId: number,
+    userId: number,
+    userName: string,
+    reason: string,
+  ): Promise<void> {
+    const maskedName = this.#maskName(userName);
+    const text =
+      `🚫 Join request declined\n\n` +
+      `<a href="tg://user?id=${userId}">${this.#escapeHtml(maskedName)}</a>` +
+      ` (ID: <code>${userId}</code>)\n` +
+      `Reason: ${reason}`;
+
+    try {
+      await this.#bot.api.sendMessage(chatId, text, { parse_mode: 'HTML' });
+    } catch {
+      console.error(`Failed to send decline notification to chat ${chatId}`);
+    }
+  }
+
+  #escapeHtml(text: string): string {
+    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  #maskName(name: string): string {
+    if (name.length <= 1) return name;
+    if (name.length === 2) return name[0] + '*';
+    return name[0] + '*'.repeat(Math.min(name.length - 2, 3)) + name[name.length - 1];
   }
 }
