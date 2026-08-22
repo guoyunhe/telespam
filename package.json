@@ -1,23 +1,55 @@
 {
   "name": "telespam",
   "version": "0.0.0",
-  "description": "",
-  "keywords": [],
-  "license": "ISC",
-  "author": "",
+  "description": "self-host anti-spam solution for telegram",
+  "keywords": [
+    "anti-spam",
+    "self-host",
+    "telegram"
+  ],
+  "homepage": "https://github.com/guoyunhe/telespam#readme",
+  "bugs": {
+    "url": "https://github.com/guoyunhe/telespam/issues"
+  },
+  "license": "AGPL-3.0-only",
+  "author": {
+    "name": "Guo Yunhe",
+    "email": "i@guoyunhe.me",
+    "url": "https://guoyunhe.me/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guoyunhe/telespam.git"
+  },
+  "files": [
+    "dist"
+  ],
   "type": "module",
-  "main": "index.js",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
+  },
   "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
     "prepare": "husky",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prepublishOnly": "pnpm run build",
+    "release": "bumpp",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@guoyunhe/oxfmt-config": "^1.1.0",
+    "@types/node": "^26.1.1",
+    "bumpp": "^11.1.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.3.0",
-    "oxfmt": "^0.64.0"
+    "oxfmt": "^0.64.0",
+    "tsdown": "^0.22.5",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
   },
   "lint-staged": {
     "*.{js,mjs,cjs,ts,mts,cts,jsx,tsx,vue,json,jsonc,css,scss,less,htm,html,md,mdx,yaml,yml}": "oxfmt --write"
