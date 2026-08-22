@@ -21,12 +21,16 @@
     "type": "git",
     "url": "git+https://github.com/guoyunhe/telespam.git"
   },
+  "bin": {
+    "telespam": "./dist/bin.mjs"
+  },
   "files": [
     "dist"
   ],
   "type": "module",
   "exports": {
     ".": "./dist/index.mjs",
+    "./bin": "./dist/bin.mjs",
     "./package.json": "./package.json"
   },
   "scripts": {
@@ -37,6 +41,7 @@
     "prepare": "husky",
     "prepublishOnly": "pnpm run build",
     "release": "bumpp",
+    "start": "tsx --env-file=.env src/bin.ts",
     "test": "vitest",
     "typecheck": "tsc --noEmit"
   },
@@ -51,6 +56,7 @@
     "lint-staged": "^17.3.0",
     "oxfmt": "^0.64.0",
     "tsdown": "^0.22.5",
+    "tsx": "^4.20.0",
     "typescript": "^7.0.2",
     "vitest": "^4.1.10"
   },
