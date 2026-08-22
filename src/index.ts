@@ -5,15 +5,11 @@ import type { ChatJoinRequest } from 'grammy/types';
 export interface TelespamOptions {
   /** Telegram Bot API key from @BotFather */
   apiKey: string;
-  /** Minimum account age in days (default: 30) */
-  minAccountAgeDays?: number;
+  /** Require users to have a profile photo (default: false) */
+  requireProfilePhoto?: boolean;
+  /** Whether to auto-approve join requests that pass all rules (default: false) */
+  autoApprove?: boolean;
 }
-
-/**
- * Approximate Unix timestamp when Telegram user IDs started. Telegram user IDs encode creation time
- * as: (id >> 32) + TELEGRAM_EPOCH
- */
-const TELEGRAM_EPOCH = 1_388_534_400; // 2014-01-01T00:00:00Z
 
 /**
  * Telespam — self-hosted anti-spam bot for Telegram groups.
@@ -25,15 +21,17 @@ const TELEGRAM_EPOCH = 1_388_534_400; // 2014-01-01T00:00:00Z
  *   ```ts
  *   const bot = new Telespam({ apiKey: '123456:ABC-DEF1234' });
  *   await bot.start();
- *   ```
+ *   ```;
  */
 export class Telespam {
   #bot: Bot;
-  #minAccountAgeMs: number;
+  #requireProfilePhoto: boolean;
+  #autoApprove: boolean;
 
   constructor(options: TelespamOptions) {
     this.#bot = new Bot(options.apiKey);
-    this.#minAccountAgeMs = (options.minAccountAgeDays ?? 30) * 24 * 60 * 60 * 1000;
+    this.#requireProfilePhoto = options.requireProfilePhoto ?? false;
+    this.#autoApprove = options.autoApprove ?? false;
   }
 
   /**
@@ -61,22 +59,18 @@ export class Telespam {
     const { id: chatId } = req.chat;
     const { id: userId } = req.from;
 
-    // Rule 1: must have a profile photo
-    if (!(await this.#hasProfilePhoto(userId))) {
+    if (this.#requireProfilePhoto && !(await this.#hasProfilePhoto(userId))) {
       await this.#bot.api.declineChatJoinRequest(chatId, userId);
       console.log(`Declined user ${userId}: no profile photo`);
       return;
     }
 
-    // Rule 2: account must be older than minAccountAgeDays
-    if (!this.#isAccountOldEnough(userId)) {
-      await this.#bot.api.declineChatJoinRequest(chatId, userId);
-      console.log(`Declined user ${userId}: account too new`);
-      return;
+    if (this.#autoApprove) {
+      await this.#bot.api.approveChatJoinRequest(chatId, userId);
+      console.log(`Approved user ${userId} in chat ${chatId}`);
+    } else {
+      console.log(`Skipped user ${userId} in chat ${chatId}: auto-approve disabled`);
     }
-
-    await this.#bot.api.approveChatJoinRequest(chatId, userId);
-    console.log(`Approved user ${userId} in chat ${chatId}`);
   }
 
   async #hasProfilePhoto(userId: number): Promise<boolean> {
@@ -86,10 +80,5 @@ export class Telespam {
     } catch {
       return false;
     }
-  }
-
-  #isAccountOldEnough(userId: number): boolean {
-    const estimatedCreatedAt = ((userId >> 32) + TELEGRAM_EPOCH) * 1000;
-    return Date.now() - estimatedCreatedAt >= this.#minAccountAgeMs;
   }
 }

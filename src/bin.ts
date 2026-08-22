@@ -14,11 +14,13 @@ if (!apiKey) {
   process.exit(1);
 }
 
-const minAccountAgeDays = process.env.MIN_ACCOUNT_AGE_DAYS
-  ? Number(process.env.MIN_ACCOUNT_AGE_DAYS)
+const requireProfilePhoto = process.env.REQUIRE_PROFILE_PHOTO
+  ? process.env.REQUIRE_PROFILE_PHOTO !== 'false'
   : undefined;
 
-const bot = new Telespam({ apiKey, minAccountAgeDays });
+const autoApprove = process.env.AUTO_APPROVE ? process.env.AUTO_APPROVE !== 'false' : undefined;
+
+const bot = new Telespam({ apiKey, requireProfilePhoto, autoApprove });
 
 process.on('SIGINT', () => {
   bot.stop().then(() => process.exit(0));

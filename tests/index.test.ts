@@ -7,8 +7,13 @@ test('Telespam constructor accepts apiKey', () => {
   expect(bot).toBeInstanceOf(Telespam);
 });
 
-test('Telespam constructor accepts minAccountAgeDays', () => {
-  const bot = new Telespam({ apiKey: '123456:ABC-DEF', minAccountAgeDays: 60 });
+test('Telespam constructor accepts requireProfilePhoto', () => {
+  const bot = new Telespam({ apiKey: '123456:ABC-DEF', requireProfilePhoto: false });
+  expect(bot).toBeInstanceOf(Telespam);
+});
+
+test('Telespam constructor accepts autoApprove', () => {
+  const bot = new Telespam({ apiKey: '123456:ABC-DEF', autoApprove: false });
   expect(bot).toBeInstanceOf(Telespam);
 });
 
