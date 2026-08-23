@@ -1,3 +1,5 @@
+[English](README.md) | [中文](README.zh.md)
+
 # telespam
 
 自托管 Telegram 反垃圾广告方案
