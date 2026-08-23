@@ -6,33 +6,15 @@ self-host anti-spam solution for telegram
 
 The Bot must be added as a group administrator with at least **"Invite Users"** permission to receive `chat_join_request` events and approve / decline join requests. If verification questions are enabled, **"Ban Users"** permission is also required to kick users who fail.
 
-## Anti-Spam Rules
-
-| Rule                      | Description                                                             |
-| ------------------------- | ----------------------------------------------------------------------- |
-| **Profile Photo**         | Require users to have a profile photo (optional, disabled by default)   |
-| **Keyword Blacklist**     | Reject users whose name, username, or bio contains blacklisted keywords |
-| **Verification Question** | After approval, send a quiz; wrong answer or timeout (180s) → kick      |
-
-When a request is declined, a notification is sent to the group and auto-deleted after 60 seconds. User names are masked to prevent advertising.
-
-## CLI Usage
+## Installation
 
 ```bash
-# Install globally
-npm i -g telespam
-
-# Create config file
-cp telespam.example.json telespam.json
-# Edit telespam.json and fill in your bot API key
-
-# Start the bot
-telespam
+sudo npm i -g telespam
 ```
 
 ### Configuration
 
-Create a `telespam.json` file in the working directory:
+Create a `~/.config/telespam.json` file in the working directory:
 
 ```json
 {
@@ -73,6 +55,12 @@ Create a `telespam.json` file in the working directory:
 | `options`  | `string[]` | _(required)_ | Answer options as inline buttons          |
 | `answer`   | `number`   | _(required)_ | 0-based index of the correct option       |
 | `timeout`  | `number`   | `180`        | Seconds before kicking unresponsive users |
+
+## Systemd Service
+
+```bash
+telegram install
+```
 
 ## Programmatic Usage
 

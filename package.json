@@ -30,6 +30,7 @@
   "type": "module",
   "exports": {
     ".": "./dist/index.mjs",
+    "./bin": "./dist/bin.mjs",
     "./package.json": "./package.json"
   },
   "scripts": {
