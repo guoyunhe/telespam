@@ -17,6 +17,11 @@ test('Telespam constructor accepts autoApprove', () => {
   expect(bot).toBeInstanceOf(Telespam);
 });
 
+test('Telespam constructor accepts blacklist', () => {
+  const bot = new Telespam({ apiKey: '123456:ABC-DEF', blacklist: ['spam', 'ad'] });
+  expect(bot).toBeInstanceOf(Telespam);
+});
+
 test('Telespam has start and stop methods', () => {
   const bot = new Telespam({ apiKey: '123456:ABC-DEF' });
   expect(typeof bot.start).toBe('function');

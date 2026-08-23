@@ -1,5 +1,5 @@
 import { Bot } from 'grammy';
-import type { ChatJoinRequest } from 'grammy/types';
+import type { ChatJoinRequest, User } from 'grammy/types';
 
 /** Configuration options for Telespam. */
 export interface TelespamOptions {
@@ -9,6 +9,8 @@ export interface TelespamOptions {
   requireProfilePhoto?: boolean;
   /** Whether to auto-approve join requests that pass all rules (default: false) */
   autoApprove?: boolean;
+  /** Blacklisted keywords in name or bio (case-insensitive) */
+  blacklist?: string[];
 }
 
 /**
@@ -27,11 +29,13 @@ export class Telespam {
   #bot: Bot;
   #requireProfilePhoto: boolean;
   #autoApprove: boolean;
+  #blacklist: string[];
 
   constructor(options: TelespamOptions) {
     this.#bot = new Bot(options.apiKey);
     this.#requireProfilePhoto = options.requireProfilePhoto ?? false;
     this.#autoApprove = options.autoApprove ?? false;
+    this.#blacklist = (options.blacklist ?? []).map((k) => k.toLowerCase());
   }
 
   /**
@@ -66,12 +70,46 @@ export class Telespam {
       return;
     }
 
+    if (this.#blacklist.length > 0) {
+      const matched = await this.#checkBlacklist(req.from);
+      if (matched) {
+        await this.#bot.api.declineChatJoinRequest(chatId, userId);
+        await this.#notifyDecline(chatId, userId, userName, `blacklisted keyword: ${matched}`);
+        return;
+      }
+    }
+
     if (this.#autoApprove) {
       await this.#bot.api.approveChatJoinRequest(chatId, userId);
       console.log(`Approved user ${userId} in chat ${chatId}`);
     } else {
       console.log(`Skipped user ${userId} in chat ${chatId}: auto-approve disabled`);
     }
+  }
+
+  async #checkBlacklist(user: User): Promise<string | null> {
+    const fields = [user.first_name, user.last_name, user.username].filter(Boolean) as string[];
+
+    for (const field of fields) {
+      const lower = field.toLowerCase();
+      for (const keyword of this.#blacklist) {
+        if (lower.includes(keyword)) return keyword;
+      }
+    }
+
+    try {
+      const chat = await this.#bot.api.getChat(user.id);
+      if ('bio' in chat && chat.bio) {
+        const lower = chat.bio.toLowerCase();
+        for (const keyword of this.#blacklist) {
+          if (lower.includes(keyword)) return keyword;
+        }
+      }
+    } catch {
+      // ignore — bio check is best-effort
+    }
+
+    return null;
   }
 
   async #hasProfilePhoto(userId: number): Promise<boolean> {

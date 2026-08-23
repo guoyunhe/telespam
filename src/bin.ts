@@ -20,7 +20,13 @@ const requireProfilePhoto = process.env.REQUIRE_PROFILE_PHOTO
 
 const autoApprove = process.env.AUTO_APPROVE ? process.env.AUTO_APPROVE !== 'false' : undefined;
 
-const bot = new Telespam({ apiKey, requireProfilePhoto, autoApprove });
+const blacklist = process.env.BLACKLIST
+  ? process.env.BLACKLIST.split(',')
+      .map((k) => k.trim())
+      .filter(Boolean)
+  : undefined;
+
+const bot = new Telespam({ apiKey, requireProfilePhoto, autoApprove, blacklist });
 
 process.on('SIGINT', () => {
   bot.stop().then(() => process.exit(0));
