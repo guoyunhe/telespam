@@ -22,6 +22,14 @@ test('Telespam constructor accepts blacklist', () => {
   expect(bot).toBeInstanceOf(Telespam);
 });
 
+test('Telespam constructor accepts verification', () => {
+  const bot = new Telespam({
+    apiKey: '123456:ABC-DEF',
+    verification: { question: '1+1=?', options: ['1', '2', '3'], answer: 1 },
+  });
+  expect(bot).toBeInstanceOf(Telespam);
+});
+
 test('Telespam has start and stop methods', () => {
   const bot = new Telespam({ apiKey: '123456:ABC-DEF' });
   expect(typeof bot.start).toBe('function');

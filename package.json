@@ -41,7 +41,7 @@
     "prepare": "husky",
     "prepublishOnly": "pnpm run build",
     "release": "bumpp",
-    "start": "tsx --env-file=.env src/bin.ts",
+    "start": "tsx src/bin.ts",
     "test": "vitest",
     "typecheck": "tsc --noEmit"
   },

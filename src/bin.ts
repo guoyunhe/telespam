@@ -1,32 +1,39 @@
 #!/usr/bin/env node
-import { Telespam } from './index.js';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
-// Load .env from CWD (Node.js built-in, v20.12+)
-try {
-  process.loadEnvFile();
-} catch {
-  // .env is optional — user may provide env vars directly
+import { Telespam } from './index.js';
+import type { TelespamOptions } from './index.js';
+
+interface Config {
+  apiKey?: string;
+  requireProfilePhoto?: boolean;
+  autoApprove?: boolean;
+  blacklist?: string[];
+  verification?: {
+    question: string;
+    options: string[];
+    answer: number;
+    timeout?: number;
+  };
 }
 
-const apiKey = process.env.TELEGRAM_BOT_API_KEY;
-if (!apiKey) {
-  console.error('Missing TELEGRAM_BOT_API_KEY environment variable');
+let config: Config = {};
+
+try {
+  const path = resolve('telespam.json');
+  config = JSON.parse(readFileSync(path, 'utf-8'));
+} catch {
+  console.error('Missing or invalid telespam.json in current directory');
   process.exit(1);
 }
 
-const requireProfilePhoto = process.env.REQUIRE_PROFILE_PHOTO
-  ? process.env.REQUIRE_PROFILE_PHOTO !== 'false'
-  : undefined;
+if (!config.apiKey) {
+  console.error('Missing apiKey in telespam.json');
+  process.exit(1);
+}
 
-const autoApprove = process.env.AUTO_APPROVE ? process.env.AUTO_APPROVE !== 'false' : undefined;
-
-const blacklist = process.env.BLACKLIST
-  ? process.env.BLACKLIST.split(',')
-      .map((k) => k.trim())
-      .filter(Boolean)
-  : undefined;
-
-const bot = new Telespam({ apiKey, requireProfilePhoto, autoApprove, blacklist });
+const bot = new Telespam(config as TelespamOptions);
 
 process.on('SIGINT', () => {
   bot.stop().then(() => process.exit(0));
