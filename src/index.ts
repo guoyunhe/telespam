@@ -47,7 +47,7 @@ export class Telespam {
   #verification: VerificationConfig | null;
   #pendingVerifications = new Map<
     number,
-    { chatId: number; messageId: number; timer: NodeJS.Timeout }
+    { chatId: number; chatName: string; messageId: number; timer: NodeJS.Timeout; userName: string }
   >();
 
   constructor(options: TelespamOptions) {
@@ -88,10 +88,11 @@ export class Telespam {
     const { id: chatId } = req.chat;
     const { id: userId } = req.from;
     const userName = req.from.first_name || `user ${userId}`;
+    const chatName = req.chat.title || `chat ${chatId}`;
 
     if (this.#requireProfilePhoto && !(await this.#hasProfilePhoto(userId))) {
       await this.#bot.api.declineChatJoinRequest(chatId, userId);
-      await this.#notifyDecline(chatId, userId, userName, 'no profile photo');
+      await this.#notifyDecline(chatId, userId, userName, chatName, 'no profile photo');
       return;
     }
 
@@ -99,21 +100,32 @@ export class Telespam {
       const matched = await this.#checkBlacklist(req.from);
       if (matched) {
         await this.#bot.api.declineChatJoinRequest(chatId, userId);
-        await this.#notifyDecline(chatId, userId, userName, `blacklisted keyword: ${matched}`);
+        await this.#notifyDecline(
+          chatId,
+          userId,
+          userName,
+          chatName,
+          `blacklisted keyword: ${matched}`,
+        );
         return;
       }
     }
 
     if (this.#autoApprove) {
       await this.#bot.api.approveChatJoinRequest(chatId, userId);
-      console.log(`Approved user ${userId} in chat ${chatId}`);
-      await this.#sendVerification(chatId, userId, userName);
+      console.log(`Approved ${userName} in ${chatName}`);
+      await this.#sendVerification(chatId, userId, userName, chatName);
     } else {
-      console.log(`Skipped user ${userId} in chat ${chatId}: auto-approve disabled`);
+      console.log(`Skipped ${userName} in ${chatName}: auto-approve disabled`);
     }
   }
 
-  async #sendVerification(chatId: number, userId: number, userName: string): Promise<void> {
+  async #sendVerification(
+    chatId: number,
+    userId: number,
+    userName: string,
+    chatName: string,
+  ): Promise<void> {
     if (!this.#verification) return;
 
     const { question, options, timeout: timeoutSec = 180 } = this.#verification;
@@ -139,9 +151,15 @@ export class Telespam {
         () => this.#onVerificationTimeout(chatId, userId),
         timeoutSec * 1000,
       );
-      this.#pendingVerifications.set(userId, { chatId, messageId: msg.message_id, timer });
+      this.#pendingVerifications.set(userId, {
+        chatId,
+        chatName,
+        messageId: msg.message_id,
+        timer,
+        userName,
+      });
     } catch {
-      console.error(`Failed to send verification to chat ${chatId}`);
+      console.error(`Failed to send verification to ${chatName}`);
     }
   }
 
@@ -179,10 +197,10 @@ export class Telespam {
     await this.#bot.api.deleteMessage(pending.chatId, pending.messageId).catch(() => {});
 
     if (isCorrect) {
-      console.log(`User ${targetUserId} passed verification`);
+      console.log(`Verification passed: ${pending.userName} in ${pending.chatName}`);
     } else {
-      await this.#kickUser(pending.chatId, targetUserId);
-      console.log(`User ${targetUserId} kicked: wrong verification answer`);
+      await this.#kickUser(pending.chatId, targetUserId, pending.userName, pending.chatName);
+      console.log(`Verification failed: ${pending.userName} in ${pending.chatName}`);
     }
   }
 
@@ -192,8 +210,8 @@ export class Telespam {
 
     this.#clearVerification(userId);
     await this.#bot.api.deleteMessage(chatId, pending.messageId).catch(() => {});
-    await this.#kickUser(chatId, userId);
-    console.log(`User ${userId} kicked: verification timeout`);
+    await this.#kickUser(chatId, userId, pending.userName, pending.chatName);
+    console.log(`Verification timeout: ${pending.userName} in ${pending.chatName}`);
   }
 
   #clearVerification(userId: number): void {
@@ -204,12 +222,17 @@ export class Telespam {
     }
   }
 
-  async #kickUser(chatId: number, userId: number): Promise<void> {
+  async #kickUser(
+    chatId: number,
+    userId: number,
+    userName: string,
+    chatName: string,
+  ): Promise<void> {
     try {
       await this.#bot.api.banChatMember(chatId, userId);
       await this.#bot.api.unbanChatMember(chatId, userId).catch(() => {});
     } catch {
-      console.error(`Failed to kick user ${userId} from chat ${chatId}`);
+      console.error(`Failed to kick ${userName} from ${chatName}`);
     }
   }
 
@@ -251,6 +274,7 @@ export class Telespam {
     chatId: number,
     userId: number,
     userName: string,
+    chatName: string,
     reason: string,
   ): Promise<void> {
     const maskedName = this.#maskName(userName);
@@ -266,7 +290,7 @@ export class Telespam {
         this.#bot.api.deleteMessage(chatId, msg.message_id).catch(() => {});
       }, 60_000);
     } catch {
-      console.error(`Failed to send decline notification to chat ${chatId}`);
+      console.error(`Failed to send decline notification to ${chatName}`);
     }
   }
 
