@@ -1,7 +1,7 @@
 {
   "decline": {
     "noPhoto": "无头像",
-    "blacklist": "命中黑名单: {{keyword}}",
+    "blacklist": "检测到黑名单关键字",
     "title": "🚫 加群申请被拒绝",
     "reason": "原因",
     "failed": "发送拒绝通知到 {{chatName}} 失败"

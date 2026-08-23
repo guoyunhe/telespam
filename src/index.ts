@@ -122,13 +122,8 @@ export class Telespam {
       const matched = await this.#checkBlacklist(req.from);
       if (matched) {
         await this.#bot.api.declineChatJoinRequest(chatId, userId);
-        await this.#notifyDecline(
-          chatId,
-          userId,
-          userName,
-          chatName,
-          this.#t('decline.blacklist', { keyword: matched }),
-        );
+        console.log(`Blacklisted: ${userName} in ${chatName} (keyword: ${matched})`);
+        await this.#notifyDecline(chatId, userId, userName, chatName, this.#t('decline.blacklist'));
         return;
       }
     }

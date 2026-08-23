@@ -1,7 +1,7 @@
 {
   "decline": {
     "noPhoto": "no profile photo",
-    "blacklist": "blacklisted keyword: {{keyword}}",
+    "blacklist": "blacklisted keyword is detected",
     "title": "🚫 Join request declined",
     "reason": "Reason",
     "failed": "Failed to send decline notification to {{chatName}}"
