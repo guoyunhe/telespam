@@ -97,7 +97,10 @@ export class Telespam {
       `Reason: ${reason}`;
 
     try {
-      await this.#bot.api.sendMessage(chatId, text, { parse_mode: 'HTML' });
+      const msg = await this.#bot.api.sendMessage(chatId, text, { parse_mode: 'HTML' });
+      setTimeout(() => {
+        this.#bot.api.deleteMessage(chatId, msg.message_id).catch(() => {});
+      }, 60_000);
     } catch {
       console.error(`Failed to send decline notification to chat ${chatId}`);
     }
