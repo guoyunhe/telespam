@@ -58,8 +58,16 @@ Create a `~/.config/telespam.json` file in the working directory:
 
 ## Systemd Service
 
+To install and start the service:
+
 ```bash
-telegram install
+telespam install
+```
+
+To stop and uninstall the service:
+
+```bash
+telespam uninstall
 ```
 
 ## Programmatic Usage
