@@ -129,7 +129,6 @@ export class Telespam {
     }
 
     if (this.#autoApprove) {
-      this.#deleteServiceMessage(chatId);
       await this.#bot.api.approveChatJoinRequest(chatId, userId);
       console.log(this.#t('log.approved', { userName, chatName }));
       await this.#sendVerification(chatId, chatName, userId, userName);
@@ -236,24 +235,6 @@ export class Telespam {
     await this.#bot.api.deleteMessage(chatId, pending.messageId).catch(() => {});
     await this.#kickUser(chatId, pending.chatName, userId, pending.userName);
     console.log(this.#t('log.timeout', { userName: pending.userName, chatName: pending.chatName }));
-  }
-
-  #deleteServiceMessage(chatId: number): void {
-    let active = true;
-    const handler = (ctx: {
-      message?: { chat: { id: number }; from?: unknown; message_id: number };
-    }) => {
-      if (!active) return;
-      if (!ctx.message || ctx.message.chat.id !== chatId) return;
-      // Service messages have no `from` field
-      if (ctx.message.from) return;
-      active = false;
-      this.#bot.api.deleteMessage(chatId, ctx.message.message_id).catch(() => {});
-    };
-    this.#bot.on('message', handler);
-    setTimeout(() => {
-      active = false;
-    }, 5000);
   }
 
   #clearVerification(userId: number): void {
