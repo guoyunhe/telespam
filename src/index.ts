@@ -114,7 +114,7 @@ export class Telespam {
     if (this.#autoApprove) {
       await this.#bot.api.approveChatJoinRequest(chatId, userId);
       console.log(`Approved ${userName} in ${chatName}`);
-      await this.#sendVerification(chatId, userId, userName, chatName);
+      await this.#sendVerification(chatId, chatName, userId, userName);
     } else {
       console.log(`Skipped ${userName} in ${chatName}: auto-approve disabled`);
     }
@@ -122,9 +122,9 @@ export class Telespam {
 
   async #sendVerification(
     chatId: number,
+    chatName: string,
     userId: number,
     userName: string,
-    chatName: string,
   ): Promise<void> {
     if (!this.#verification) return;
 
@@ -199,7 +199,7 @@ export class Telespam {
     if (isCorrect) {
       console.log(`Verification passed: ${pending.userName} in ${pending.chatName}`);
     } else {
-      await this.#kickUser(pending.chatId, targetUserId, pending.userName, pending.chatName);
+      await this.#kickUser(pending.chatId, pending.chatName, targetUserId, pending.userName);
       console.log(`Verification failed: ${pending.userName} in ${pending.chatName}`);
     }
   }
@@ -210,7 +210,7 @@ export class Telespam {
 
     this.#clearVerification(userId);
     await this.#bot.api.deleteMessage(chatId, pending.messageId).catch(() => {});
-    await this.#kickUser(chatId, userId, pending.userName, pending.chatName);
+    await this.#kickUser(chatId, pending.chatName, userId, pending.userName);
     console.log(`Verification timeout: ${pending.userName} in ${pending.chatName}`);
   }
 
@@ -224,9 +224,9 @@ export class Telespam {
 
   async #kickUser(
     chatId: number,
+    chatName: string,
     userId: number,
     userName: string,
-    chatName: string,
   ): Promise<void> {
     try {
       await this.#bot.api.banChatMember(chatId, userId);
