@@ -1,0 +1,30 @@
+{
+  "decline": {
+    "noPhoto": "无头像",
+    "blacklist": "命中黑名单: {{keyword}}",
+    "title": "🚫 加群申请被拒绝",
+    "reason": "原因",
+    "failed": "发送拒绝通知到 {{chatName}} 失败"
+  },
+  "log": {
+    "approved": "已批准 {{userName}} 加入 {{chatName}}",
+    "skipped": "跳过 {{userName}} 在 {{chatName}}: 自动批准已关闭",
+    "passed": "验证通过: {{userName}} 在 {{chatName}}",
+    "failed": "验证失败: {{userName}} 在 {{chatName}}",
+    "timeout": "验证超时: {{userName}} 在 {{chatName}}"
+  },
+  "verification": {
+    "timer": "⏳ 请在 {{seconds}} 秒内回答问题。",
+    "kickWarning": "✗ 回答错误或超时将被移出群组。",
+    "failedToSend": "发送验证问题到 {{chatName}} 失败"
+  },
+  "callback": {
+    "notForYou": "这不是给你的",
+    "expired": "验证已过期",
+    "correct": "✅ 回答正确！",
+    "wrong": "❌ 回答错误"
+  },
+  "kick": {
+    "failed": "踢出 {{userName}} 从 {{chatName}} 失败"
+  }
+}

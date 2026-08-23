@@ -1,10 +1,19 @@
 import { Bot, InlineKeyboard } from 'grammy';
 import type { ChatJoinRequest, User } from 'grammy/types';
+import i18next, { type TFunction } from 'i18next';
+
+import enLocale from './locales/en.json';
+import zhLocale from './locales/zh.json';
+
+/** Supported languages. */
+export type Language = 'en' | 'zh';
 
 /** Configuration options for Telespam. */
 export interface TelespamOptions {
   /** Telegram Bot API key from @BotFather */
   apiKey: string;
+  /** Language for bot messages (default: 'en') */
+  language?: Language;
   /** Require users to have a profile photo (default: false) */
   requireProfilePhoto?: boolean;
   /** Whether to auto-approve join requests that pass all rules (default: false) */
@@ -41,6 +50,7 @@ export interface VerificationConfig {
  */
 export class Telespam {
   #bot: Bot;
+  #t: TFunction;
   #requireProfilePhoto: boolean;
   #autoApprove: boolean;
   #blacklist: string[];
@@ -52,6 +62,18 @@ export class Telespam {
 
   constructor(options: TelespamOptions) {
     this.#bot = new Bot(options.apiKey);
+
+    const i18n = i18next.createInstance();
+    i18n.init({
+      lng: options.language ?? 'en',
+      fallbackLng: 'en',
+      resources: {
+        en: { translation: enLocale },
+        zh: { translation: zhLocale },
+      },
+    });
+    this.#t = i18n.t.bind(i18n);
+
     this.#requireProfilePhoto = options.requireProfilePhoto ?? false;
     this.#autoApprove = options.autoApprove ?? false;
     this.#blacklist = (options.blacklist ?? []).map((k) => k.toLowerCase());
@@ -92,7 +114,7 @@ export class Telespam {
 
     if (this.#requireProfilePhoto && !(await this.#hasProfilePhoto(userId))) {
       await this.#bot.api.declineChatJoinRequest(chatId, userId);
-      await this.#notifyDecline(chatId, userId, userName, chatName, 'no profile photo');
+      await this.#notifyDecline(chatId, userId, userName, chatName, this.#t('decline.noPhoto'));
       return;
     }
 
@@ -105,7 +127,7 @@ export class Telespam {
           userId,
           userName,
           chatName,
-          `blacklisted keyword: ${matched}`,
+          this.#t('decline.blacklist', { keyword: matched }),
         );
         return;
       }
@@ -113,10 +135,10 @@ export class Telespam {
 
     if (this.#autoApprove) {
       await this.#bot.api.approveChatJoinRequest(chatId, userId);
-      console.log(`Approved ${userName} in ${chatName}`);
+      console.log(this.#t('log.approved', { userName, chatName }));
       await this.#sendVerification(chatId, chatName, userId, userName);
     } else {
-      console.log(`Skipped ${userName} in ${chatName}: auto-approve disabled`);
+      console.log(this.#t('log.skipped', { userName, chatName }));
     }
   }
 
@@ -139,8 +161,8 @@ export class Telespam {
     const text =
       `${mention}, ${this.#escapeHtml(question)}\n` +
       `\n` +
-      `⏳ You have ${timeoutSec} seconds to answer.\n` +
-      `❌ Wrong answer or timeout → kicked from the group.`;
+      `${this.#t('verification.timer', { seconds: timeoutSec })}\n` +
+      `${this.#t('verification.kickWarning')}`;
 
     try {
       const msg = await this.#bot.api.sendMessage(chatId, text, {
@@ -159,7 +181,7 @@ export class Telespam {
         userName,
       });
     } catch {
-      console.error(`Failed to send verification to ${chatName}`);
+      console.error(this.#t('verification.failedToSend', { chatName }));
     }
   }
 
@@ -180,27 +202,33 @@ export class Telespam {
     const fromId = ctx.callbackQuery.from.id;
 
     if (fromId !== targetUserId) {
-      await ctx.answerCallbackQuery('This is not for you');
+      await ctx.answerCallbackQuery(this.#t('callback.notForYou'));
       return;
     }
 
     const pending = this.#pendingVerifications.get(targetUserId);
     if (!pending) {
-      await ctx.answerCallbackQuery('Verification expired');
+      await ctx.answerCallbackQuery(this.#t('callback.expired'));
       return;
     }
 
     const isCorrect = this.#verification?.answer === answerIndex;
-    await ctx.answerCallbackQuery(isCorrect ? '✅ Correct!' : '❌ Wrong answer');
+    await ctx.answerCallbackQuery(
+      isCorrect ? this.#t('callback.correct') : this.#t('callback.wrong'),
+    );
 
     this.#clearVerification(targetUserId);
     await this.#bot.api.deleteMessage(pending.chatId, pending.messageId).catch(() => {});
 
     if (isCorrect) {
-      console.log(`Verification passed: ${pending.userName} in ${pending.chatName}`);
+      console.log(
+        this.#t('log.passed', { userName: pending.userName, chatName: pending.chatName }),
+      );
     } else {
       await this.#kickUser(pending.chatId, pending.chatName, targetUserId, pending.userName);
-      console.log(`Verification failed: ${pending.userName} in ${pending.chatName}`);
+      console.log(
+        this.#t('log.failed', { userName: pending.userName, chatName: pending.chatName }),
+      );
     }
   }
 
@@ -211,7 +239,7 @@ export class Telespam {
     this.#clearVerification(userId);
     await this.#bot.api.deleteMessage(chatId, pending.messageId).catch(() => {});
     await this.#kickUser(chatId, pending.chatName, userId, pending.userName);
-    console.log(`Verification timeout: ${pending.userName} in ${pending.chatName}`);
+    console.log(this.#t('log.timeout', { userName: pending.userName, chatName: pending.chatName }));
   }
 
   #clearVerification(userId: number): void {
@@ -232,7 +260,7 @@ export class Telespam {
       await this.#bot.api.banChatMember(chatId, userId);
       await this.#bot.api.unbanChatMember(chatId, userId).catch(() => {});
     } catch {
-      console.error(`Failed to kick ${userName} from ${chatName}`);
+      console.error(this.#t('kick.failed', { userName, chatName }));
     }
   }
 
@@ -279,10 +307,10 @@ export class Telespam {
   ): Promise<void> {
     const maskedName = this.#maskName(userName);
     const text =
-      `🚫 Join request declined\n\n` +
+      `${this.#t('decline.title')}\n\n` +
       `<a href="tg://user?id=${userId}">${this.#escapeHtml(maskedName)}</a>` +
       ` (ID: <code>${userId}</code>)\n` +
-      `Reason: ${reason}`;
+      `${this.#t('decline.reason')}: ${reason}`;
 
     try {
       const msg = await this.#bot.api.sendMessage(chatId, text, { parse_mode: 'HTML' });
@@ -290,7 +318,7 @@ export class Telespam {
         this.#bot.api.deleteMessage(chatId, msg.message_id).catch(() => {});
       }, 60_000);
     } catch {
-      console.error(`Failed to send decline notification to ${chatName}`);
+      console.error(this.#t('decline.failed', { chatName }));
     }
   }
 

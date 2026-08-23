@@ -46,7 +46,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "grammy": "^1.37.0"
+    "grammy": "^1.37.0",
+    "i18next": "^26.4.0"
   },
   "devDependencies": {
     "@guoyunhe/oxfmt-config": "^1.1.0",

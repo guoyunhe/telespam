@@ -36,6 +36,7 @@ Create a `telespam.json` file in the working directory:
 
 ```json
 {
+  "language": "en",
   "apiKey": "123456:ABC-DEF",
   "requireProfilePhoto": false,
   "autoApprove": false,
@@ -46,6 +47,7 @@ Create a `telespam.json` file in the working directory:
 
 | Option                | Type               | Default      | Description                                           |
 | --------------------- | ------------------ | ------------ | ----------------------------------------------------- |
+| `language`            | `"en"` \| `"zh"`   | `"en"`       | Language for bot messages                             |
 | `apiKey`              | `string`           | _(required)_ | Bot API key from [@BotFather](https://t.me/botfather) |
 | `requireProfilePhoto` | `boolean`          | `false`      | Require users to have a profile photo                 |
 | `autoApprove`         | `boolean`          | `false`      | Auto-approve requests that pass all rules             |
@@ -78,6 +80,7 @@ Create a `telespam.json` file in the working directory:
 import { Telespam } from 'telespam';
 
 const bot = new Telespam({
+  language: 'zh',
   apiKey: '123456:ABC-DEF',
   requireProfilePhoto: true,
   autoApprove: true,
@@ -85,8 +88,8 @@ const bot = new Telespam({
   verification: {
     question: 'What is 1 + 1?',
     options: ['1', '2', '3'],
-    answer: 1, // 0-based index of the correct option
-    timeout: 180, // seconds (default)
+    answer: 1,
+    timeout: 180,
   },
 });
 
@@ -99,6 +102,7 @@ await bot.start();
 
 | Option                | Type                 | Default      | Description                                         |
 | --------------------- | -------------------- | ------------ | --------------------------------------------------- |
+| `language`            | `'en'` \\            | `'zh'`       | `'en'`                                              | Language for bot messages |
 | `apiKey`              | `string`             | _(required)_ | Bot API key from @BotFather                         |
 | `requireProfilePhoto` | `boolean`            | `false`      | Require users to have a profile photo               |
 | `autoApprove`         | `boolean`            | `false`      | Auto-approve requests that pass all rules           |
