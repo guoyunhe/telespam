@@ -107,13 +107,13 @@ export class Telespam {
     if (this.#autoApprove) {
       await this.#bot.api.approveChatJoinRequest(chatId, userId);
       console.log(`Approved user ${userId} in chat ${chatId}`);
-      await this.#sendVerification(chatId, userId);
+      await this.#sendVerification(chatId, userId, userName);
     } else {
       console.log(`Skipped user ${userId} in chat ${chatId}: auto-approve disabled`);
     }
   }
 
-  async #sendVerification(chatId: number, userId: number): Promise<void> {
+  async #sendVerification(chatId: number, userId: number, userName: string): Promise<void> {
     if (!this.#verification) return;
 
     const { question, options, timeout: timeoutSec = 180 } = this.#verification;
@@ -123,9 +123,17 @@ export class Telespam {
       keyboard.text(options[i], `v|${userId}|${i}`).row();
     }
 
+    const mention = `<a href="tg://user?id=${userId}">${this.#escapeHtml(userName)}</a>`;
+    const text =
+      `${mention}, ${this.#escapeHtml(question)}\n` +
+      `\n` +
+      `⏳ You have ${timeoutSec} seconds to answer.\n` +
+      `❌ Wrong answer or timeout → kicked from the group.`;
+
     try {
-      const msg = await this.#bot.api.sendMessage(chatId, question, {
+      const msg = await this.#bot.api.sendMessage(chatId, text, {
         reply_markup: keyboard,
+        parse_mode: 'HTML',
       });
       const timer = setTimeout(
         () => this.#onVerificationTimeout(chatId, userId),
