@@ -47,6 +47,7 @@
   },
   "dependencies": {
     "commander": "^15.0.0",
+    "fast-shuffle": "^6.2.1",
     "grammy": "^1.37.0",
     "i18next": "^26.4.0"
   },

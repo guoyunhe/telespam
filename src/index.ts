@@ -1,3 +1,4 @@
+import { shuffle } from 'fast-shuffle';
 import { Bot, InlineKeyboard } from 'grammy';
 import type { ChatJoinRequest, User } from 'grammy/types';
 import i18next, { type TFunction } from 'i18next';
@@ -79,6 +80,7 @@ export class Telespam {
       timer: NodeJS.Timeout;
       userName: string;
       questionIndex: number;
+      correctAnswerIndex: number;
     }
   >();
   #stats = new Map<number, { approved: number; declined: number }>();
@@ -215,7 +217,13 @@ export class Telespam {
     }
 
     const config = this.#verification[questionIndex];
-    const { question, options, timeout: timeoutSec = 180 } = config;
+    const { question, options: origOptions, timeout: timeoutSec = 180 } = config;
+
+    // Shuffle options and track the correct answer's new position
+    const indices = shuffle(origOptions.map((_, i) => i));
+    const options = indices.map((i) => origOptions[i]);
+    const correctAnswerIndex = indices.indexOf(config.answer);
+
     const keyboard = new InlineKeyboard();
 
     for (let i = 0; i < options.length; i++) {
@@ -245,6 +253,7 @@ export class Telespam {
         timer,
         userName,
         questionIndex,
+        correctAnswerIndex,
       });
     } catch {
       this.#logError(`Failed to send verification to ${chatName}`, chatName);
@@ -278,8 +287,7 @@ export class Telespam {
       return;
     }
 
-    const currentConfig = this.#verification[pending.questionIndex];
-    const isCorrect = currentConfig?.answer === answerIndex;
+    const isCorrect = pending.correctAnswerIndex === answerIndex;
     await ctx.answerCallbackQuery(
       isCorrect ? this.#t('callback.correct') : this.#t('callback.wrong'),
     );
