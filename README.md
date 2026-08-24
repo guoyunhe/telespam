@@ -60,6 +60,38 @@ Create a `~/.config/telespam.json` file in the working directory:
 | `answer`   | `number`   | _(required)_ | 0-based index of the correct option       |
 | `timeout`  | `number`   | `180`        | Seconds before kicking unresponsive users |
 
+#### Multi-instance
+
+To run multiple bots with a single config file, use a JSON array. Each bot username is auto-detected via the Telegram API and included in log output:
+
+```json
+[
+  {
+    "language": "en",
+    "apiKey": "123456:ABC-DEF",
+    "requireProfilePhoto": true,
+    "autoApprove": true,
+    "nameKeywordBlacklist": ["spam"],
+    "bioKeywordBlacklist": [],
+    "verification": null
+  },
+  {
+    "language": "zh",
+    "apiKey": "654321:GHI-JKL",
+    "requireProfilePhoto": false,
+    "autoApprove": false,
+    "nameKeywordBlacklist": [],
+    "bioKeywordBlacklist": ["广告"],
+    "verification": {
+      "question": "What is 1 + 1?",
+      "options": ["1", "2", "3"],
+      "answer": 1,
+      "timeout": 180
+    }
+  }
+]
+```
+
 ## Systemd Service
 
 To install and start the service:

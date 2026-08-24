@@ -60,6 +60,38 @@ sudo npm i -g telespam
 | `answer`   | `number`   | _(必填)_ | 正确选项的索引（从 0 开始） |
 | `timeout`  | `number`   | `180`    | 超时踢出用户的秒数          |
 
+#### 多实例
+
+要使用单个配置文件运行多个 bot，可以使用 JSON 数组。每个 bot 的用户名会通过 Telegram API 自动获取并显示在日志中：
+
+```json
+[
+  {
+    "language": "en",
+    "apiKey": "123456:ABC-DEF",
+    "requireProfilePhoto": true,
+    "autoApprove": true,
+    "nameKeywordBlacklist": ["spam"],
+    "bioKeywordBlacklist": [],
+    "verification": null
+  },
+  {
+    "language": "zh",
+    "apiKey": "654321:GHI-JKL",
+    "requireProfilePhoto": false,
+    "autoApprove": false,
+    "nameKeywordBlacklist": [],
+    "bioKeywordBlacklist": ["广告"],
+    "verification": {
+      "question": "1 + 1 等于几？",
+      "options": ["1", "2", "3"],
+      "answer": 1,
+      "timeout": 180
+    }
+  }
+]
+```
+
 ## 配置文件优先级
 
 `cwd/telespam.json` 优先于 `~/.config/telespam.json`，不会合并两个文件。
