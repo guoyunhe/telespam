@@ -26,5 +26,10 @@
   },
   "kick": {
     "failed": "Failed to kick {{userName}} from {{chatName}}"
+  },
+  "report": {
+    "title": "📊 Daily report",
+    "approved": "✅ Approved: {{count}}",
+    "declined": "🚫 Declined: {{count}}"
   }
 }

@@ -62,6 +62,8 @@ export class Telespam {
     number,
     { chatId: number; chatName: string; messageId: number; timer: NodeJS.Timeout; userName: string }
   >();
+  #stats = new Map<number, { approved: number; declined: number }>();
+  #midnightTimer: NodeJS.Timeout | null = null;
 
   constructor(options: TelespamOptions) {
     this.#bot = new Bot(options.apiKey);
@@ -92,6 +94,8 @@ export class Telespam {
     this.#bot.on('chat_join_request', (ctx) => this.#handleRequest(ctx.chatJoinRequest));
     this.#bot.on('callback_query:data', (ctx) => this.#handleCallback(ctx));
 
+    this.#scheduleMidnight();
+
     await this.#bot.start({
       onStart: (info) => {
         console.log(`Telespam started: @${info.username}`);
@@ -101,6 +105,10 @@ export class Telespam {
 
   /** Stop the bot and release resources. */
   async stop(): Promise<void> {
+    if (this.#midnightTimer) {
+      clearTimeout(this.#midnightTimer);
+      this.#midnightTimer = null;
+    }
     for (const [, pending] of this.#pendingVerifications) {
       clearTimeout(pending.timer);
     }
@@ -120,6 +128,7 @@ export class Telespam {
 
     if (this.#requireProfilePhoto && !(await this.#hasProfilePhoto(userId))) {
       await this.#bot.api.declineChatJoinRequest(chatId, userId);
+      this.#recordStats(chatId, 'declined');
       await this.#notifyDecline(chatId, userId, userName, chatName, this.#t('decline.noPhoto'));
       return;
     }
@@ -128,6 +137,7 @@ export class Telespam {
       const matched = this.#checkNameBlacklist(req.from);
       if (matched) {
         await this.#bot.api.declineChatJoinRequest(chatId, userId);
+        this.#recordStats(chatId, 'declined');
         console.log(`Name blacklisted: ${userName} in ${chatName} (keyword: ${matched})`);
         await this.#notifyDecline(chatId, userId, userName, chatName, this.#t('decline.blacklist'));
         return;
@@ -138,6 +148,7 @@ export class Telespam {
       const matched = await this.#checkBioBlacklist(userId);
       if (matched) {
         await this.#bot.api.declineChatJoinRequest(chatId, userId);
+        this.#recordStats(chatId, 'declined');
         console.log(`Bio blacklisted: ${userName} in ${chatName} (keyword: ${matched})`);
         await this.#notifyDecline(chatId, userId, userName, chatName, this.#t('decline.blacklist'));
         return;
@@ -159,7 +170,10 @@ export class Telespam {
     userId: number,
     userName: string,
   ): Promise<void> {
-    if (!this.#verification) return;
+    if (!this.#verification) {
+      this.#recordStats(chatId, 'approved');
+      return;
+    }
 
     const { question, options, timeout: timeoutSec = 180 } = this.#verification;
     const keyboard = new InlineKeyboard();
@@ -232,10 +246,12 @@ export class Telespam {
     await this.#bot.api.deleteMessage(pending.chatId, pending.messageId).catch(() => {});
 
     if (isCorrect) {
+      this.#recordStats(pending.chatId, 'approved');
       console.log(
         this.#t('log.passed', { userName: pending.userName, chatName: pending.chatName }),
       );
     } else {
+      this.#recordStats(pending.chatId, 'declined');
       await this.#kickUser(pending.chatId, pending.chatName, targetUserId, pending.userName);
       console.log(
         this.#t('log.failed', { userName: pending.userName, chatName: pending.chatName }),
@@ -248,6 +264,7 @@ export class Telespam {
     if (!pending) return;
 
     this.#clearVerification(userId);
+    this.#recordStats(chatId, 'declined');
     await this.#bot.api.deleteMessage(chatId, pending.messageId).catch(() => {});
     await this.#kickUser(chatId, pending.chatName, userId, pending.userName);
     console.log(this.#t('log.timeout', { userName: pending.userName, chatName: pending.chatName }));
@@ -345,5 +362,50 @@ export class Telespam {
     if (name.length <= 1) return name;
     if (name.length === 2) return name[0] + '*';
     return name[0] + '*'.repeat(Math.min(name.length - 2, 3)) + name[name.length - 1];
+  }
+
+  // ---- stats ----
+
+  #recordStats(chatId: number, type: 'approved' | 'declined'): void {
+    let entry = this.#stats.get(chatId);
+    if (!entry) {
+      entry = { approved: 0, declined: 0 };
+      this.#stats.set(chatId, entry);
+    }
+    entry[type]++;
+  }
+
+  #scheduleMidnight(): void {
+    const now = new Date();
+    const midnight = new Date(now);
+    midnight.setHours(24, 0, 0, 0);
+    const ms = midnight.getTime() - now.getTime();
+
+    this.#midnightTimer = setTimeout(() => {
+      this.#sendDailyReports();
+      // Switch to 24h interval
+      this.#midnightTimer = setInterval(() => this.#sendDailyReports(), 24 * 60 * 60 * 1000);
+    }, ms);
+  }
+
+  async #sendDailyReports(): Promise<void> {
+    const snapshot = new Map(this.#stats);
+    this.#stats.clear();
+
+    if (snapshot.size === 0) return;
+
+    for (const [chatId, stat] of snapshot) {
+      const text = [
+        this.#t('report.title'),
+        this.#t('report.approved', { count: stat.approved }),
+        this.#t('report.declined', { count: stat.declined }),
+      ].join('\n');
+
+      try {
+        await this.#bot.api.sendMessage(chatId, text);
+      } catch {
+        // ignore — chat may not be accessible
+      }
+    }
   }
 }

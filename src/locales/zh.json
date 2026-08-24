@@ -26,5 +26,10 @@
   },
   "kick": {
     "failed": "踢出 {{userName}} 从 {{chatName}} 失败"
+  },
+  "report": {
+    "title": "📊 每日统计",
+    "approved": "✅ 通过: {{count}}",
+    "declined": "🚫 拦截: {{count}}"
   }
 }
