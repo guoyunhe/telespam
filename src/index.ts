@@ -113,7 +113,9 @@ export class Telespam {
   async #handleRequest(req: ChatJoinRequest): Promise<void> {
     const { id: chatId } = req.chat;
     const { id: userId } = req.from;
-    const userName = req.from.first_name || `user ${userId}`;
+    const userName = req.from.last_name
+      ? req.from.first_name + ' ' + req.from.last_name
+      : req.from.first_name;
     const chatName = req.chat.title || `chat ${chatId}`;
 
     if (this.#requireProfilePhoto && !(await this.#hasProfilePhoto(userId))) {
