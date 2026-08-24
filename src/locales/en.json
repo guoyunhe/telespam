@@ -3,29 +3,17 @@
     "noPhoto": "no profile photo",
     "blacklist": "blacklisted keyword is detected",
     "title": "🚫 Join request declined",
-    "reason": "Reason",
-    "failed": "Failed to send decline notification to {{chatName}}"
-  },
-  "log": {
-    "approved": "Approved {{userName}} in {{chatName}}",
-    "skipped": "Skipped {{userName}} in {{chatName}}: auto-approve disabled",
-    "passed": "Verification passed: {{userName}} in {{chatName}}",
-    "failed": "Verification failed: {{userName}} in {{chatName}}",
-    "timeout": "Verification timeout: {{userName}} in {{chatName}}"
+    "reason": "Reason"
   },
   "verification": {
     "timer": "⏳ You have {{seconds}} seconds to answer.",
-    "kickWarning": "✗ Wrong answer or timeout → kicked from the group.",
-    "failedToSend": "Failed to send verification to {{chatName}}"
+    "kickWarning": "✗ Wrong answer or timeout → kicked from the group."
   },
   "callback": {
     "notForYou": "This is not for you",
     "expired": "Verification expired",
     "correct": "✅ Correct!",
     "wrong": "❌ Wrong answer"
-  },
-  "kick": {
-    "failed": "Failed to kick {{userName}} from {{chatName}}"
   },
   "report": {
     "title": "📊 Daily report",

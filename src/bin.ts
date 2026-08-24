@@ -29,13 +29,15 @@ function resolveConfigPaths(): string[] {
 }
 
 /** Load the first valid config file by priority: cwd/telespam.json > ~/.config/telespam.json. */
-function loadConfig(): Config {
+function loadConfig(): Config[] {
   const paths = resolveConfigPaths();
 
   for (const path of paths) {
     if (!existsSync(path)) continue;
     try {
-      return JSON.parse(readFileSync(path, 'utf-8'));
+      const raw = JSON.parse(readFileSync(path, 'utf-8'));
+      // Support both single config and array of configs
+      return Array.isArray(raw) ? raw : [raw];
     } catch {
       console.error(`Warning: invalid JSON in ${path}`);
     }
@@ -71,20 +73,26 @@ switch (command) {
 
 // ---- run bot ----
 
-const config = loadConfig();
+const configs = loadConfig();
 
-if (!config.apiKey) {
-  console.error('Missing apiKey in telespam.json');
-  process.exit(1);
+// Validate all configs
+for (let i = 0; i < configs.length; i++) {
+  if (!configs[i].apiKey) {
+    console.error(`Missing apiKey in config[${i}] of telespam.json`);
+    process.exit(1);
+  }
 }
 
-const bot = new Telespam(config as TelespamOptions);
+const bots = configs.map((config) => new Telespam(config as TelespamOptions));
 
-process.on('SIGINT', () => {
-  bot.stop().then(() => process.exit(0));
-});
-process.on('SIGTERM', () => {
-  bot.stop().then(() => process.exit(0));
-});
+// Graceful shutdown: stop all bots on SIGINT / SIGTERM
+const shutdown = async () => {
+  await Promise.all(bots.map((bot) => bot.stop()));
+  process.exit(0);
+};
 
-await bot.start();
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
+
+// Start all bots
+await Promise.all(bots.map((bot) => bot.start()));

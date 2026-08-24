@@ -53,6 +53,7 @@ export interface VerificationConfig {
 export class Telespam {
   #bot: Bot;
   #t: TFunction;
+  #botName: string;
   #requireProfilePhoto: boolean;
   #autoApprove: boolean;
   #nameKeywordBlacklist: string[];
@@ -67,6 +68,7 @@ export class Telespam {
 
   constructor(options: TelespamOptions) {
     this.#bot = new Bot(options.apiKey);
+    this.#botName = '';
 
     const i18n = i18next.createInstance();
     i18n.init({
@@ -91,14 +93,18 @@ export class Telespam {
    * join requests.
    */
   async start(): Promise<void> {
+    // Fetch bot username from API for log prefix
+    const me = await this.#bot.api.getMe();
+    this.#botName = me.username;
+
     this.#bot.on('chat_join_request', (ctx) => this.#handleRequest(ctx.chatJoinRequest));
     this.#bot.on('callback_query:data', (ctx) => this.#handleCallback(ctx));
 
     this.#scheduleMidnight();
 
     await this.#bot.start({
-      onStart: (info) => {
-        console.log(`Telespam started: @${info.username}`);
+      onStart: () => {
+        this.#log(`Telespam started: @${this.#botName}`);
       },
     });
   }
@@ -117,6 +123,20 @@ export class Telespam {
   }
 
   // ---- private helpers ----
+
+  /** Log with [botName] prefix. */
+  #log(message: string, chatName?: string): void {
+    const prefix = this.#botName ? `[@${this.#botName}]` : '';
+    const suffix = chatName ? ` [${chatName}]` : '';
+    console.log(`${prefix}${suffix} ${message}`);
+  }
+
+  /** Log error with [botName] prefix. */
+  #logError(message: string, chatName?: string): void {
+    const prefix = this.#botName ? `[@${this.#botName}]` : '';
+    const suffix = chatName ? ` [${chatName}]` : '';
+    console.error(`${prefix}${suffix} ${message}`);
+  }
 
   async #handleRequest(req: ChatJoinRequest): Promise<void> {
     const { id: chatId } = req.chat;
@@ -138,7 +158,7 @@ export class Telespam {
       if (matched) {
         await this.#bot.api.declineChatJoinRequest(chatId, userId);
         this.#recordStats(chatId, 'declined');
-        console.log(`Name blacklisted: ${userName} in ${chatName} (keyword: ${matched})`);
+        this.#log(`Name blacklisted: ${userName} (keyword: ${matched})`, chatName);
         await this.#notifyDecline(chatId, userId, userName, chatName, this.#t('decline.blacklist'));
         return;
       }
@@ -149,7 +169,7 @@ export class Telespam {
       if (matched) {
         await this.#bot.api.declineChatJoinRequest(chatId, userId);
         this.#recordStats(chatId, 'declined');
-        console.log(`Bio blacklisted: ${userName} in ${chatName} (keyword: ${matched})`);
+        this.#log(`Bio blacklisted: ${userName} (keyword: ${matched})`, chatName);
         await this.#notifyDecline(chatId, userId, userName, chatName, this.#t('decline.blacklist'));
         return;
       }
@@ -157,10 +177,10 @@ export class Telespam {
 
     if (this.#autoApprove) {
       await this.#bot.api.approveChatJoinRequest(chatId, userId);
-      console.log(this.#t('log.approved', { userName, chatName }));
+      this.#log(`Approved ${userName} in ${chatName}`, chatName);
       await this.#sendVerification(chatId, chatName, userId, userName);
     } else {
-      console.log(this.#t('log.skipped', { userName, chatName }));
+      this.#log(`Skipped ${userName} in ${chatName}: auto-approve disabled`, chatName);
     }
   }
 
@@ -206,7 +226,7 @@ export class Telespam {
         userName,
       });
     } catch {
-      console.error(this.#t('verification.failedToSend', { chatName }));
+      this.#logError(`Failed to send verification to ${chatName}`, chatName);
     }
   }
 
@@ -247,14 +267,16 @@ export class Telespam {
 
     if (isCorrect) {
       this.#recordStats(pending.chatId, 'approved');
-      console.log(
-        this.#t('log.passed', { userName: pending.userName, chatName: pending.chatName }),
+      this.#log(
+        `Verification passed: ${pending.userName} in ${pending.chatName}`,
+        pending.chatName,
       );
     } else {
       this.#recordStats(pending.chatId, 'declined');
       await this.#kickUser(pending.chatId, pending.chatName, targetUserId, pending.userName);
-      console.log(
-        this.#t('log.failed', { userName: pending.userName, chatName: pending.chatName }),
+      this.#log(
+        `Verification failed: ${pending.userName} in ${pending.chatName}`,
+        pending.chatName,
       );
     }
   }
@@ -267,7 +289,7 @@ export class Telespam {
     this.#recordStats(chatId, 'declined');
     await this.#bot.api.deleteMessage(chatId, pending.messageId).catch(() => {});
     await this.#kickUser(chatId, pending.chatName, userId, pending.userName);
-    console.log(this.#t('log.timeout', { userName: pending.userName, chatName: pending.chatName }));
+    this.#log(`Verification timeout: ${pending.userName} in ${pending.chatName}`, pending.chatName);
   }
 
   #clearVerification(userId: number): void {
@@ -288,7 +310,7 @@ export class Telespam {
       await this.#bot.api.banChatMember(chatId, userId);
       await this.#bot.api.unbanChatMember(chatId, userId).catch(() => {});
     } catch {
-      console.error(this.#t('kick.failed', { userName, chatName }));
+      this.#logError(`Failed to kick ${userName} from ${chatName}`, chatName);
     }
   }
 
@@ -350,7 +372,7 @@ export class Telespam {
         this.#bot.api.deleteMessage(chatId, msg.message_id).catch(() => {});
       }, 60_000);
     } catch {
-      console.error(this.#t('decline.failed', { chatName }));
+      this.#logError(`Failed to send decline notification to ${chatName}`, chatName);
     }
   }
 
