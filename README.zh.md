@@ -78,6 +78,12 @@ telespam install
 telespam uninstall
 ```
 
+修改配置或更新包后重启服务：
+
+```bash
+systemctl --user restart telespam
+```
+
 ## 编程使用
 
 ```ts

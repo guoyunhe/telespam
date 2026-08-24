@@ -74,6 +74,12 @@ To stop and uninstall the service:
 telespam uninstall
 ```
 
+To restart after config changes or package updates:
+
+```bash
+systemctl --user restart telespam
+```
+
 ## Programmatic Usage
 
 ```ts
