@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Multi-step verification: `verification` now supports an array of question configs for multi-question verification flow.
+
+### Changed
+
+- `Configuration` section in README promoted from `###` to `##` heading.
+
 ## [0.3.0] - 2026-08-24
 
 ### Added

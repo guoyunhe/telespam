@@ -22,8 +22,11 @@ export interface TelespamOptions {
   nameKeywordBlacklist?: string[];
   /** Blacklisted keywords in bio (case-insensitive) */
   bioKeywordBlacklist?: string[];
-  /** Verification question sent to users after approval */
-  verification?: VerificationConfig;
+  /**
+   * Verification question(s) sent to users after approval. Can be a single config or an array of
+   * configs for multi-step verification.
+   */
+  verification?: VerificationConfig | VerificationConfig[];
 }
 
 /** Configuration for a verification question. */
@@ -36,6 +39,14 @@ export interface VerificationConfig {
   answer: number;
   /** Timeout in seconds before kicking the user (default: 180) */
   timeout?: number;
+}
+
+/** Normalize verification config to an array. */
+function normalizeVerification(
+  v: VerificationConfig | VerificationConfig[] | null | undefined,
+): VerificationConfig[] {
+  if (!v) return [];
+  return Array.isArray(v) ? v : [v];
 }
 
 /**
@@ -58,10 +69,17 @@ export class Telespam {
   #autoApprove: boolean;
   #nameKeywordBlacklist: string[];
   #bioKeywordBlacklist: string[];
-  #verification: VerificationConfig | null;
+  #verification: VerificationConfig[];
   #pendingVerifications = new Map<
     number,
-    { chatId: number; chatName: string; messageId: number; timer: NodeJS.Timeout; userName: string }
+    {
+      chatId: number;
+      chatName: string;
+      messageId: number;
+      timer: NodeJS.Timeout;
+      userName: string;
+      questionIndex: number;
+    }
   >();
   #stats = new Map<number, { approved: number; declined: number }>();
   #midnightTimer: NodeJS.Timeout | null = null;
@@ -85,7 +103,7 @@ export class Telespam {
     this.#autoApprove = options.autoApprove ?? false;
     this.#nameKeywordBlacklist = (options.nameKeywordBlacklist ?? []).map((k) => k.toLowerCase());
     this.#bioKeywordBlacklist = (options.bioKeywordBlacklist ?? []).map((k) => k.toLowerCase());
-    this.#verification = options.verification ?? null;
+    this.#verification = normalizeVerification(options.verification);
   }
 
   /**
@@ -189,13 +207,15 @@ export class Telespam {
     chatName: string,
     userId: number,
     userName: string,
+    questionIndex: number = 0,
   ): Promise<void> {
-    if (!this.#verification) {
+    if (this.#verification.length === 0) {
       this.#recordStats(chatId, 'approved');
       return;
     }
 
-    const { question, options, timeout: timeoutSec = 180 } = this.#verification;
+    const config = this.#verification[questionIndex];
+    const { question, options, timeout: timeoutSec = 180 } = config;
     const keyboard = new InlineKeyboard();
 
     for (let i = 0; i < options.length; i++) {
@@ -224,6 +244,7 @@ export class Telespam {
         messageId: msg.message_id,
         timer,
         userName,
+        questionIndex,
       });
     } catch {
       this.#logError(`Failed to send verification to ${chatName}`, chatName);
@@ -257,7 +278,8 @@ export class Telespam {
       return;
     }
 
-    const isCorrect = this.#verification?.answer === answerIndex;
+    const currentConfig = this.#verification[pending.questionIndex];
+    const isCorrect = currentConfig?.answer === answerIndex;
     await ctx.answerCallbackQuery(
       isCorrect ? this.#t('callback.correct') : this.#t('callback.wrong'),
     );
@@ -266,11 +288,24 @@ export class Telespam {
     await this.#bot.api.deleteMessage(pending.chatId, pending.messageId).catch(() => {});
 
     if (isCorrect) {
-      this.#recordStats(pending.chatId, 'approved');
-      this.#log(
-        `Verification passed: ${pending.userName} in ${pending.chatName}`,
-        pending.chatName,
-      );
+      const nextIndex = pending.questionIndex + 1;
+      if (nextIndex < this.#verification.length) {
+        // Advance to next question
+        await this.#sendVerification(
+          pending.chatId,
+          pending.chatName,
+          targetUserId,
+          pending.userName,
+          nextIndex,
+        );
+      } else {
+        // All questions answered correctly
+        this.#recordStats(pending.chatId, 'approved');
+        this.#log(
+          `Verification passed: ${pending.userName} in ${pending.chatName}`,
+          pending.chatName,
+        );
+      }
     } else {
       this.#recordStats(pending.chatId, 'declined');
       await this.#kickUser(pending.chatId, pending.chatName, targetUserId, pending.userName);
