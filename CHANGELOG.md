@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-24
+
 ### Added
 
 - Multi-instance support: config file can be an array of bot configurations.
@@ -21,7 +23,7 @@ All notable changes to this project will be documented in this file.
 
 - Removed `botName` from config options (auto-detected via API).
 
-## [0.2.0] - 2024-06-10
+## [0.2.0] - 2026-08-24
 
 ### Added
 
@@ -32,13 +34,13 @@ All notable changes to this project will be documented in this file.
 
 - Full name composition (`first_name` + `last_name`).
 
-## [0.1.1] - 2024-06-06
+## [0.1.1] - 2026-08-23
 
 ### Fixed
 
 - Build output configuration.
 
-## [0.1.0] - 2024-06-06
+## [0.1.0] - 2026-08-23
 
 ### Added
 

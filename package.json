@@ -1,6 +1,6 @@
 {
   "name": "telespam",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "self-host anti-spam solution for telegram",
   "keywords": [
     "anti-spam",
