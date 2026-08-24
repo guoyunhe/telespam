@@ -7,20 +7,6 @@ import { Telespam } from './index.js';
 import type { TelespamOptions } from './index.js';
 import { cmdInstall, cmdStatus, cmdUninstall } from './systemd.js';
 
-interface Config {
-  apiKey?: string;
-  requireProfilePhoto?: boolean;
-  autoApprove?: boolean;
-  nameKeywordBlacklist?: string[];
-  bioKeywordBlacklist?: string[];
-  verification?: {
-    question: string;
-    options: string[];
-    answer: number;
-    timeout?: number;
-  };
-}
-
 // ---- helpers ----
 
 /** Resolve config paths, ordered by priority (first wins). */
@@ -29,7 +15,7 @@ function resolveConfigPaths(): string[] {
 }
 
 /** Load the first valid config file by priority: cwd/telespam.json > ~/.config/telespam.json. */
-function loadConfig(): Config[] {
+function loadConfig(): TelespamOptions[] {
   const paths = resolveConfigPaths();
 
   for (const path of paths) {
@@ -83,7 +69,7 @@ for (let i = 0; i < configs.length; i++) {
   }
 }
 
-const bots = configs.map((config) => new Telespam(config as TelespamOptions));
+const bots = configs.map((config) => new Telespam(config));
 
 // Graceful shutdown: stop all bots on SIGINT / SIGTERM
 const shutdown = async () => {
