@@ -11,7 +11,8 @@ interface Config {
   apiKey?: string;
   requireProfilePhoto?: boolean;
   autoApprove?: boolean;
-  blacklist?: string[];
+  nameKeywordBlacklist?: string[];
+  bioKeywordBlacklist?: string[];
   verification?: {
     question: string;
     options: string[];

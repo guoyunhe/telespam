@@ -18,8 +18,10 @@ export interface TelespamOptions {
   requireProfilePhoto?: boolean;
   /** Whether to auto-approve join requests that pass all rules (default: false) */
   autoApprove?: boolean;
-  /** Blacklisted keywords in name or bio (case-insensitive) */
-  blacklist?: string[];
+  /** Blacklisted keywords in first_name, last_name, username (case-insensitive) */
+  nameKeywordBlacklist?: string[];
+  /** Blacklisted keywords in bio (case-insensitive) */
+  bioKeywordBlacklist?: string[];
   /** Verification question sent to users after approval */
   verification?: VerificationConfig;
 }
@@ -53,7 +55,8 @@ export class Telespam {
   #t: TFunction;
   #requireProfilePhoto: boolean;
   #autoApprove: boolean;
-  #blacklist: string[];
+  #nameKeywordBlacklist: string[];
+  #bioKeywordBlacklist: string[];
   #verification: VerificationConfig | null;
   #pendingVerifications = new Map<
     number,
@@ -76,7 +79,8 @@ export class Telespam {
 
     this.#requireProfilePhoto = options.requireProfilePhoto ?? false;
     this.#autoApprove = options.autoApprove ?? false;
-    this.#blacklist = (options.blacklist ?? []).map((k) => k.toLowerCase());
+    this.#nameKeywordBlacklist = (options.nameKeywordBlacklist ?? []).map((k) => k.toLowerCase());
+    this.#bioKeywordBlacklist = (options.bioKeywordBlacklist ?? []).map((k) => k.toLowerCase());
     this.#verification = options.verification ?? null;
   }
 
@@ -118,11 +122,21 @@ export class Telespam {
       return;
     }
 
-    if (this.#blacklist.length > 0) {
-      const matched = await this.#checkBlacklist(req.from);
+    if (this.#nameKeywordBlacklist.length > 0) {
+      const matched = this.#checkNameBlacklist(req.from);
       if (matched) {
         await this.#bot.api.declineChatJoinRequest(chatId, userId);
-        console.log(`Blacklisted: ${userName} in ${chatName} (keyword: ${matched})`);
+        console.log(`Name blacklisted: ${userName} in ${chatName} (keyword: ${matched})`);
+        await this.#notifyDecline(chatId, userId, userName, chatName, this.#t('decline.blacklist'));
+        return;
+      }
+    }
+
+    if (this.#bioKeywordBlacklist.length > 0) {
+      const matched = await this.#checkBioBlacklist(userId);
+      if (matched) {
+        await this.#bot.api.declineChatJoinRequest(chatId, userId);
+        console.log(`Bio blacklisted: ${userName} in ${chatName} (keyword: ${matched})`);
         await this.#notifyDecline(chatId, userId, userName, chatName, this.#t('decline.blacklist'));
         return;
       }
@@ -259,21 +273,25 @@ export class Telespam {
     }
   }
 
-  async #checkBlacklist(user: User): Promise<string | null> {
+  #checkNameBlacklist(user: User): string | null {
     const fields = [user.first_name, user.last_name, user.username].filter(Boolean) as string[];
 
     for (const field of fields) {
       const lower = field.toLowerCase();
-      for (const keyword of this.#blacklist) {
+      for (const keyword of this.#nameKeywordBlacklist) {
         if (lower.includes(keyword)) return keyword;
       }
     }
 
+    return null;
+  }
+
+  async #checkBioBlacklist(userId: number): Promise<string | null> {
     try {
-      const chat = await this.#bot.api.getChat(user.id);
+      const chat = await this.#bot.api.getChat(userId);
       if ('bio' in chat && chat.bio) {
         const lower = chat.bio.toLowerCase();
-        for (const keyword of this.#blacklist) {
+        for (const keyword of this.#bioKeywordBlacklist) {
           if (lower.includes(keyword)) return keyword;
         }
       }

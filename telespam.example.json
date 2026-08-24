@@ -3,6 +3,7 @@
   "apiKey": "",
   "requireProfilePhoto": false,
   "autoApprove": false,
-  "blacklist": [],
+  "nameKeywordBlacklist": [],
+  "bioKeywordBlacklist": [],
   "verification": null
 }

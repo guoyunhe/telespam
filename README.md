@@ -24,19 +24,21 @@ Create a `~/.config/telespam.json` file in the working directory:
   "apiKey": "123456:ABC-DEF",
   "requireProfilePhoto": false,
   "autoApprove": false,
-  "blacklist": ["spam", "广告"],
+  "nameKeywordBlacklist": [],
+  "bioKeywordBlacklist": ["spam", "广告"],
   "verification": null
 }
 ```
 
-| Option                | Type               | Default      | Description                                           |
-| --------------------- | ------------------ | ------------ | ----------------------------------------------------- |
-| `language`            | `"en"` \| `"zh"`   | `"en"`       | Language for bot messages                             |
-| `apiKey`              | `string`           | _(required)_ | Bot API key from [@BotFather](https://t.me/botfather) |
-| `requireProfilePhoto` | `boolean`          | `false`      | Require users to have a profile photo                 |
-| `autoApprove`         | `boolean`          | `false`      | Auto-approve requests that pass all rules             |
-| `blacklist`           | `string[]`         | `[]`         | Blacklisted keywords (case-insensitive)               |
-| `verification`        | `object` \| `null` | `null`       | Verification question sent after approval             |
+| Option                 | Type               | Default      | Description                                           |
+| ---------------------- | ------------------ | ------------ | ----------------------------------------------------- |
+| `language`             | `"en"` \| `"zh"`   | `"en"`       | Language for bot messages                             |
+| `apiKey`               | `string`           | _(required)_ | Bot API key from [@BotFather](https://t.me/botfather) |
+| `requireProfilePhoto`  | `boolean`          | `false`      | Require users to have a profile photo                 |
+| `autoApprove`          | `boolean`          | `false`      | Auto-approve requests that pass all rules             |
+| `nameKeywordBlacklist` | `string[]`         | `[]`         | Blacklisted keywords in names (case-insensitive)      |
+| `bioKeywordBlacklist`  | `string[]`         | `[]`         | Blacklisted keywords in bio (case-insensitive)        |
+| `verification`         | `object` \| `null` | `null`       | Verification question sent after approval             |
 
 #### Verification
 
@@ -82,7 +84,8 @@ const bot = new Telespam({
   apiKey: '123456:ABC-DEF',
   requireProfilePhoto: true,
   autoApprove: true,
-  blacklist: ['spam', '广告', '加微信'],
+  nameKeywordBlacklist: ['spam', '广告'],
+  bioKeywordBlacklist: ['加微信'],
   verification: {
     question: 'What is 1 + 1?',
     options: ['1', '2', '3'],
@@ -98,14 +101,15 @@ await bot.start();
 
 #### `new Telespam(options)`
 
-| Option                | Type                 | Default      | Description                                         |
-| --------------------- | -------------------- | ------------ | --------------------------------------------------- |
-| `language`            | `'en'` \\            | `'zh'`       | `'en'`                                              | Language for bot messages |
-| `apiKey`              | `string`             | _(required)_ | Bot API key from @BotFather                         |
-| `requireProfilePhoto` | `boolean`            | `false`      | Require users to have a profile photo               |
-| `autoApprove`         | `boolean`            | `false`      | Auto-approve requests that pass all rules           |
-| `blacklist`           | `string[]`           | `[]`         | Blacklisted keywords in name/bio (case-insensitive) |
-| `verification`        | `VerificationConfig` | `null`       | Verification question sent after approval           |
+| Option                 | Type                 | Default      | Description                                                                  |
+| ---------------------- | -------------------- | ------------ | ---------------------------------------------------------------------------- |
+| `language`             | `'en'` \\            | `'zh'`       | `'en'`                                                                       | Language for bot messages |
+| `apiKey`               | `string`             | _(required)_ | Bot API key from @BotFather                                                  |
+| `requireProfilePhoto`  | `boolean`            | `false`      | Require users to have a profile photo                                        |
+| `autoApprove`          | `boolean`            | `false`      | Auto-approve requests that pass all rules                                    |
+| `nameKeywordBlacklist` | `string[]`           | `[]`         | Blacklisted keywords in first_name / last_name / username (case-insensitive) |
+| `bioKeywordBlacklist`  | `string[]`           | `[]`         | Blacklisted keywords in bio (case-insensitive)                               |
+| `verification`         | `VerificationConfig` | `null`       | Verification question sent after approval                                    |
 
 #### `VerificationConfig`
 
