@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-08-25
+
 ### 新增
 
 - `telespam restart` 命令，用于重启 systemd 用户服务。
