@@ -72,7 +72,7 @@ export class Telespam {
   #bioKeywordBlacklist: string[];
   #verification: VerificationConfig[];
   #pendingVerifications = new Map<
-    number,
+    string,
     {
       chatId: number;
       chatName: string;
@@ -246,7 +246,7 @@ export class Telespam {
         () => this.#onVerificationTimeout(chatId, userId),
         timeoutSec * 1000,
       );
-      this.#pendingVerifications.set(userId, {
+      this.#pendingVerifications.set(`${chatId}:${userId}`, {
         chatId,
         chatName,
         messageId: msg.message_id,
@@ -281,7 +281,10 @@ export class Telespam {
       return;
     }
 
-    const pending = this.#pendingVerifications.get(targetUserId);
+    const chatId = ctx.callbackQuery.message?.chat.id;
+    if (!chatId) return;
+
+    const pending = this.#pendingVerifications.get(`${chatId}:${targetUserId}`);
     if (!pending) {
       await ctx.answerCallbackQuery(this.#t('callback.expired'));
       return;
@@ -292,7 +295,7 @@ export class Telespam {
       isCorrect ? this.#t('callback.correct') : this.#t('callback.wrong'),
     );
 
-    this.#clearVerification(targetUserId);
+    this.#clearVerification(chatId, targetUserId);
     await this.#bot.api.deleteMessage(pending.chatId, pending.messageId).catch(() => {});
 
     if (isCorrect) {
@@ -325,21 +328,22 @@ export class Telespam {
   }
 
   async #onVerificationTimeout(chatId: number, userId: number): Promise<void> {
-    const pending = this.#pendingVerifications.get(userId);
+    const pending = this.#pendingVerifications.get(`${chatId}:${userId}`);
     if (!pending) return;
 
-    this.#clearVerification(userId);
+    this.#clearVerification(chatId, userId);
     this.#recordStats(chatId, 'declined');
     await this.#bot.api.deleteMessage(chatId, pending.messageId).catch(() => {});
     await this.#kickUser(chatId, pending.chatName, userId, pending.userName);
     this.#log(`Verification timeout: ${pending.userName} in ${pending.chatName}`, pending.chatName);
   }
 
-  #clearVerification(userId: number): void {
-    const pending = this.#pendingVerifications.get(userId);
+  #clearVerification(chatId: number, userId: number): void {
+    const key = `${chatId}:${userId}`;
+    const pending = this.#pendingVerifications.get(key);
     if (pending) {
       clearTimeout(pending.timer);
-      this.#pendingVerifications.delete(userId);
+      this.#pendingVerifications.delete(key);
     }
   }
 

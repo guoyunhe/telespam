@@ -7,6 +7,11 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Multi-step verification: `verification` now supports an array of question configs for multi-question verification flow.
+- Verification answer options are now randomly shuffled per question.
+
+### Fixed
+
+- `pendingVerifications` now uses composite key `chatId:userId` so the same user can be verified in multiple chats simultaneously.
 
 ## [0.3.0] - 2026-08-24
 
