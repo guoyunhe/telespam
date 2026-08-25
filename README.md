@@ -132,7 +132,13 @@ telespam uninstall
 To restart after config changes or package updates:
 
 ```bash
-systemctl --user restart telespam
+telespam restart
+```
+
+To view live logs:
+
+```bash
+telespam logs
 ```
 
 ## Programmatic Usage

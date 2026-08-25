@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+### 新增
+
+- `telespam restart` 命令，用于重启 systemd 用户服务。
+- `telespam logs` 命令，用于查看实时服务日志。
+
 ## [0.5.0] - 2026-08-25
 
 ### 变更

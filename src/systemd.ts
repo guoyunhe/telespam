@@ -33,7 +33,7 @@ function systemctl(args: string): void {
   }
 }
 
-export function cmdInstall(): void {
+export function install(): void {
   const configPath = join(homedir(), '.config', 'telespam.json');
 
   if (!existsSync(configPath)) {
@@ -61,7 +61,7 @@ export function cmdInstall(): void {
   console.log(`  Logs:   journalctl --user -u ${SERVICE_NAME} -f`);
 }
 
-export function cmdUninstall(): void {
+export function uninstall(): void {
   if (!existsSync(SERVICE_PATH)) {
     console.log('Telespam service is not installed.');
     return;
@@ -75,7 +75,24 @@ export function cmdUninstall(): void {
   console.log('✓ Telespam systemd service uninstalled');
 }
 
-export function cmdStatus(): void {
+export function restart(): void {
+  if (!existsSync(SERVICE_PATH)) {
+    console.log('Telespam service is not installed.');
+    return;
+  }
+  systemctl(`restart ${SERVICE_NAME}`);
+  console.log('✓ Telespam systemd service restarted');
+}
+
+export function logs(): void {
+  try {
+    execSync(`journalctl --user -u ${SERVICE_NAME} -f`, { stdio: 'inherit' });
+  } catch {
+    process.exit(1);
+  }
+}
+
+export function status(): void {
   if (!existsSync(SERVICE_PATH)) {
     console.log('Telespam service is not installed.');
     return;

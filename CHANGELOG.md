@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- `telespam restart` command to restart the systemd user service.
+- `telespam logs` command to view live service logs.
+
 ## [0.5.0] - 2026-08-25
 
 ### Changed

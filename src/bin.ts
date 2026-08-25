@@ -5,7 +5,7 @@ import { Command } from 'commander';
 
 import { loadConfig } from './config.js';
 import { Telespam } from './index.js';
-import { cmdInstall, cmdStatus, cmdUninstall } from './systemd.js';
+import { install, logs, restart, status, uninstall } from './systemd.js';
 
 const require = createRequire(import.meta.url);
 const pkg = require('../package.json') as { version: string };
@@ -21,7 +21,7 @@ program
   .command('install')
   .description('install as systemd user service')
   .action(() => {
-    cmdInstall();
+    install();
     process.exit(0);
   });
 
@@ -29,7 +29,7 @@ program
   .command('uninstall')
   .description('uninstall systemd user service')
   .action(() => {
-    cmdUninstall();
+    uninstall();
     process.exit(0);
   });
 
@@ -37,7 +37,23 @@ program
   .command('status')
   .description('show systemd service status')
   .action(() => {
-    cmdStatus();
+    status();
+    process.exit(0);
+  });
+
+program
+  .command('restart')
+  .description('restart systemd user service')
+  .action(() => {
+    restart();
+    process.exit(0);
+  });
+
+program
+  .command('logs')
+  .description('show systemd service logs (follow mode)')
+  .action(() => {
+    logs();
     process.exit(0);
   });
 

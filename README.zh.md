@@ -136,7 +136,13 @@ telespam uninstall
 修改配置或更新包后重启服务：
 
 ```bash
-systemctl --user restart telespam
+telespam restart
+```
+
+查看实时日志：
+
+```bash
+telespam logs
 ```
 
 ## 编程使用
