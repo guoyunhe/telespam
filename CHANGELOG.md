@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking**: `nameKeywordBlacklist` and `bioKeywordBlacklist` merged into a single `keywordBlacklist` that applies to both name fields and bio.
+
 ## [0.4.0] - 2026-08-25
 
 ### Added

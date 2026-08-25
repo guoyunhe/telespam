@@ -24,21 +24,19 @@ sudo npm i -g telespam
   "apiKey": "123456:ABC-DEF",
   "requireProfilePhoto": false,
   "autoApprove": false,
-  "nameKeywordBlacklist": [],
-  "bioKeywordBlacklist": ["spam", "广告"],
+  "keywordBlacklist": ["spam", "广告"],
   "verification": null
 }
 ```
 
-| 选项                   | 类型                             | 默认值   | 说明                                                        |
-| ---------------------- | -------------------------------- | -------- | ----------------------------------------------------------- |
-| `language`             | `"en"` \| `"zh"`                 | `"en"`   | Bot 消息语言                                                |
-| `apiKey`               | `string`                         | _(必填)_ | 从 [@BotFather](https://t.me/botfather) 获取的 Bot API 密钥 |
-| `requireProfilePhoto`  | `boolean`                        | `false`  | 要求用户必须设置头像                                        |
-| `autoApprove`          | `boolean`                        | `false`  | 自动批准通过所有规则的加群申请                              |
-| `nameKeywordBlacklist` | `string[]`                       | `[]`     | 名称黑名单关键词（不区分大小写）                            |
-| `bioKeywordBlacklist`  | `string[]`                       | `[]`     | 简介黑名单关键词（不区分大小写）                            |
-| `verification`         | `object` \| `object[]` \| `null` | `null`   | 批准后发送的验证问题                                        |
+| 选项                  | 类型                             | 默认值   | 说明                                                        |
+| --------------------- | -------------------------------- | -------- | ----------------------------------------------------------- |
+| `language`            | `"en"` \| `"zh"`                 | `"en"`   | Bot 消息语言                                                |
+| `apiKey`              | `string`                         | _(必填)_ | 从 [@BotFather](https://t.me/botfather) 获取的 Bot API 密钥 |
+| `requireProfilePhoto` | `boolean`                        | `false`  | 要求用户必须设置头像                                        |
+| `autoApprove`         | `boolean`                        | `false`  | 自动批准通过所有规则的加群申请                              |
+| `keywordBlacklist`    | `string[]`                       | `[]`     | 名称与简介黑名单关键词（不区分大小写）                      |
+| `verification`        | `object` \| `object[]` \| `null` | `null`   | 批准后发送的验证问题                                        |
 
 #### 验证问题
 
@@ -96,8 +94,7 @@ sudo npm i -g telespam
     "apiKey": "123456:ABC-DEF",
     "requireProfilePhoto": true,
     "autoApprove": true,
-    "nameKeywordBlacklist": ["spam"],
-    "bioKeywordBlacklist": [],
+    "keywordBlacklist": ["spam"],
     "verification": null
   },
   {
@@ -105,8 +102,7 @@ sudo npm i -g telespam
     "apiKey": "654321:GHI-JKL",
     "requireProfilePhoto": false,
     "autoApprove": false,
-    "nameKeywordBlacklist": [],
-    "bioKeywordBlacklist": ["广告"],
+    "keywordBlacklist": ["广告"],
     "verification": [
       {
         "question": "1 + 1 等于几？",
@@ -153,8 +149,7 @@ const bot = new Telespam({
   apiKey: '123456:ABC-DEF',
   requireProfilePhoto: true,
   autoApprove: true,
-  nameKeywordBlacklist: ['spam', '广告'],
-  bioKeywordBlacklist: ['加微信'],
+  keywordBlacklist: ['spam', '广告'],
   verification: [
     {
       question: '1 + 1 等于几？',
@@ -172,15 +167,14 @@ await bot.start();
 
 #### `new Telespam(options)`
 
-| 选项                   | 类型                                           | 默认值   | 说明                                                                     |
-| ---------------------- | ---------------------------------------------- | -------- | ------------------------------------------------------------------------ |
-| `language`             | `'en'` \| `'zh'`                               | `'en'`   | Bot 消息语言                                                             |
-| `apiKey`               | `string`                                       | _(必填)_ | 从 @BotFather 获取的 Bot API 密钥                                        |
-| `requireProfilePhoto`  | `boolean`                                      | `false`  | 要求用户必须设置头像                                                     |
-| `autoApprove`          | `boolean`                                      | `false`  | 自动批准通过所有规则的加群申请                                           |
-| `nameKeywordBlacklist` | `string[]`                                     | `[]`     | 名称黑名单关键词，匹配 first_name / last_name / username（不区分大小写） |
-| `bioKeywordBlacklist`  | `string[]`                                     | `[]`     | 简介黑名单关键词，匹配 bio（不区分大小写）                               |
-| `verification`         | `VerificationConfig` \| `VerificationConfig[]` | `null`   | 批准后发送的验证问题                                                     |
+| 选项                  | 类型                                           | 默认值   | 说明                                                                                 |
+| --------------------- | ---------------------------------------------- | -------- | ------------------------------------------------------------------------------------ |
+| `language`            | `'en'` \| `'zh'`                               | `'en'`   | Bot 消息语言                                                                         |
+| `apiKey`              | `string`                                       | _(必填)_ | 从 @BotFather 获取的 Bot API 密钥                                                    |
+| `requireProfilePhoto` | `boolean`                                      | `false`  | 要求用户必须设置头像                                                                 |
+| `autoApprove`         | `boolean`                                      | `false`  | 自动批准通过所有规则的加群申请                                                       |
+| `keywordBlacklist`    | `string[]`                                     | `[]`     | 名称与简介黑名单关键词，匹配 first_name / last_name / username / bio（不区分大小写） |
+| `verification`        | `VerificationConfig` \| `VerificationConfig[]` | `null`   | 批准后发送的验证问题                                                                 |
 
 #### `VerificationConfig`
 

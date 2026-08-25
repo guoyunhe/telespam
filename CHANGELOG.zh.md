@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### 变更
+
+- **破坏性变更**：`nameKeywordBlacklist` 和 `bioKeywordBlacklist` 合并为单一的 `keywordBlacklist`，同时应用于名称和简介字段。
+
 ## [0.4.0] - 2026-08-25
 
 ### 新增

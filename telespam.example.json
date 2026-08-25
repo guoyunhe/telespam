@@ -3,8 +3,7 @@
   "apiKey": "",
   "requireProfilePhoto": false,
   "autoApprove": false,
-  "nameKeywordBlacklist": [],
-  "bioKeywordBlacklist": [],
+  "keywordBlacklist": [],
   "verification": [
     {
       "question": "What is 2 + 2?",

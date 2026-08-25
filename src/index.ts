@@ -19,10 +19,8 @@ export interface TelespamOptions {
   requireProfilePhoto?: boolean;
   /** Whether to auto-approve join requests that pass all rules (default: false) */
   autoApprove?: boolean;
-  /** Blacklisted keywords in first_name, last_name, username (case-insensitive) */
-  nameKeywordBlacklist?: string[];
-  /** Blacklisted keywords in bio (case-insensitive) */
-  bioKeywordBlacklist?: string[];
+  /** Blacklisted keywords in first_name, last_name, username, and bio (case-insensitive) */
+  keywordBlacklist?: string[];
   /**
    * Verification question(s) sent to users after approval. Can be a single config or an array of
    * configs for multi-step verification.
@@ -68,8 +66,7 @@ export class Telespam {
   #botName: string;
   #requireProfilePhoto: boolean;
   #autoApprove: boolean;
-  #nameKeywordBlacklist: string[];
-  #bioKeywordBlacklist: string[];
+  #keywordBlacklist: string[];
   #verification: VerificationConfig[];
   #pendingVerifications = new Map<
     string,
@@ -103,8 +100,7 @@ export class Telespam {
 
     this.#requireProfilePhoto = options.requireProfilePhoto ?? false;
     this.#autoApprove = options.autoApprove ?? false;
-    this.#nameKeywordBlacklist = (options.nameKeywordBlacklist ?? []).map((k) => k.toLowerCase());
-    this.#bioKeywordBlacklist = (options.bioKeywordBlacklist ?? []).map((k) => k.toLowerCase());
+    this.#keywordBlacklist = (options.keywordBlacklist ?? []).map((k) => k.toLowerCase());
     this.#verification = normalizeVerification(options.verification);
   }
 
@@ -173,7 +169,7 @@ export class Telespam {
       return;
     }
 
-    if (this.#nameKeywordBlacklist.length > 0) {
+    if (this.#keywordBlacklist.length > 0) {
       const matched = this.#checkNameBlacklist(req.from);
       if (matched) {
         await this.#bot.api.declineChatJoinRequest(chatId, userId);
@@ -184,7 +180,7 @@ export class Telespam {
       }
     }
 
-    if (this.#bioKeywordBlacklist.length > 0) {
+    if (this.#keywordBlacklist.length > 0) {
       const matched = await this.#checkBioBlacklist(userId);
       if (matched) {
         await this.#bot.api.declineChatJoinRequest(chatId, userId);
@@ -366,7 +362,7 @@ export class Telespam {
 
     for (const field of fields) {
       const lower = field.toLowerCase();
-      for (const keyword of this.#nameKeywordBlacklist) {
+      for (const keyword of this.#keywordBlacklist) {
         if (lower.includes(keyword)) return keyword;
       }
     }
@@ -379,7 +375,7 @@ export class Telespam {
       const chat = await this.#bot.api.getChat(userId);
       if ('bio' in chat && chat.bio) {
         const lower = chat.bio.toLowerCase();
-        for (const keyword of this.#bioKeywordBlacklist) {
+        for (const keyword of this.#keywordBlacklist) {
           if (lower.includes(keyword)) return keyword;
         }
       }
