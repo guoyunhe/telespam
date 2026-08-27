@@ -297,7 +297,11 @@ export class Telespam {
     );
 
     this.#clearVerification(chatId, targetUserId);
-    await this.#bot.api.deleteMessage(pending.chatId, pending.messageId).catch(() => {});
+    try {
+      await this.#bot.api.deleteMessage(pending.chatId, pending.messageId);
+    } catch {
+      this.#logError('Failed to delete verification message', pending.chatName);
+    }
 
     if (isCorrect) {
       const nextIndex = pending.questionIndex + 1;
@@ -328,7 +332,11 @@ export class Telespam {
 
     this.#clearVerification(chatId, userId);
     this.#statsManager.record(chatId, 'declined');
-    await this.#bot.api.deleteMessage(chatId, pending.messageId).catch(() => {});
+    try {
+      await this.#bot.api.deleteMessage(chatId, pending.messageId);
+    } catch {
+      this.#logError('Failed to delete verification message', pending.chatName);
+    }
     await this.#kickUser(chatId, pending.chatName, userId, pending.userName);
     this.#log('Verification timeout', pending.chatName, pending.userName);
   }
@@ -425,7 +433,9 @@ export class Telespam {
         { retries: 3, retryDelay: 1000 },
       );
       setTimeout(() => {
-        this.#bot.api.deleteMessage(chatId, msg.message_id).catch(() => {});
+        this.#bot.api.deleteMessage(chatId, msg.message_id).catch(() => {
+          this.#logError('Failed to delete decline notification', chatName);
+        });
       }, 60_000);
     } catch {
       this.#logError(`Failed to send decline notification`, chatName);
