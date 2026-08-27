@@ -4,9 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-08-27
+
 ### Added
 
+- Retry utility (`@guoyunhe/retry`) for Telegram API calls with error logging.
 - Daily stats are persisted to a tmp file (`/tmp/telespam-stats-<bot>.json`) so they survive unexpected process restarts.
+
+### Changed
+
+- Improved error handling for message deletion.
+- Improved log formatting with chat and user names.
+- Decline message templates moved to locale files.
 
 ## [0.6.0] - 2026-08-25
 
