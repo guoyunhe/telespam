@@ -81,5 +81,8 @@
       "version": "^11.22.0",
       "onFail": "download"
     }
+  },
+  "engines": {
+    "node": ">=20"
   }
 }
