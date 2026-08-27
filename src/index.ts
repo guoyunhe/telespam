@@ -83,6 +83,7 @@ export class Telespam {
     }
   >();
   #statsManager!: StatsManager;
+  #chatNames = new Map<number, string>();
   #midnightTimer: NodeJS.Timeout | null = null;
 
   constructor(options: TelespamOptions) {
@@ -124,7 +125,7 @@ export class Telespam {
 
     await this.#bot.start({
       onStart: () => {
-        this.#log(`Telespam started: @${this.#botName}`);
+        this.#log(`Telespam started`);
       },
     });
   }
@@ -145,17 +146,21 @@ export class Telespam {
   // ---- private helpers ----
 
   /** Log with [botName] prefix. */
-  #log(message: string, chatName?: string): void {
-    const prefix = this.#botName ? `[@${this.#botName}]` : '';
-    const suffix = chatName ? ` [${chatName}]` : '';
-    console.log(`${prefix}${suffix} ${message}`);
+  #log(message: string, chatName?: string, userName?: string): void {
+    const parts: string[] = [];
+    if (this.#botName) parts.push(`[@${this.#botName}]`);
+    if (chatName) parts.push(`[${chatName}]`);
+    if (userName) parts.push(`(${userName})`);
+    console.log(`${parts.join(' ')} ${message}`);
   }
 
   /** Log error with [botName] prefix. */
-  #logError(message: string, chatName?: string): void {
-    const prefix = this.#botName ? `[@${this.#botName}]` : '';
-    const suffix = chatName ? ` [${chatName}]` : '';
-    console.error(`${prefix}${suffix} ${message}`);
+  #logError(message: string, chatName?: string, userName?: string): void {
+    const parts: string[] = [];
+    if (this.#botName) parts.push(`[@${this.#botName}]`);
+    if (chatName) parts.push(`[${chatName}]`);
+    if (userName) parts.push(`(${userName})`);
+    console.error(`${parts.join(' ')} ${message}`);
   }
 
   async #handleRequest(ctx: { chatJoinRequest: ChatJoinRequest }): Promise<void> {
@@ -166,6 +171,7 @@ export class Telespam {
       ? req.from.first_name + ' ' + req.from.last_name
       : req.from.first_name;
     const chatName = req.chat.title || `chat ${chatId}`;
+    this.#chatNames.set(chatId, chatName);
 
     if (this.#requireProfilePhoto && !(await this.#hasProfilePhoto(userId))) {
       await this.#decline(chatId, userId, userName, chatName, this.#t('decline.noPhoto'));
@@ -175,7 +181,7 @@ export class Telespam {
     if (this.#keywordBlacklist.length > 0) {
       const matched = this.#checkNameBlacklist(req.from);
       if (matched) {
-        this.#log(`Name blacklisted: ${userName} (keyword: ${matched})`, chatName);
+        this.#log(`Name blacklisted (keyword: ${matched})`, chatName, userName);
         await this.#decline(chatId, userId, userName, chatName, this.#t('decline.blacklist'));
         return;
       }
@@ -184,7 +190,7 @@ export class Telespam {
     if (this.#keywordBlacklist.length > 0) {
       const matched = await this.#checkBioBlacklist(userId);
       if (matched) {
-        this.#log(`Bio blacklisted: ${userName} (keyword: ${matched})`, chatName);
+        this.#log(`Bio blacklisted (keyword: ${matched})`, chatName, userName);
         await this.#decline(chatId, userId, userName, chatName, this.#t('decline.blacklist'));
         return;
       }
@@ -192,10 +198,10 @@ export class Telespam {
 
     if (this.#autoApprove) {
       await this.#bot.api.approveChatJoinRequest(chatId, userId);
-      this.#log(`Approved ${userName} in ${chatName}`, chatName);
+      this.#log('Approved', chatName, userName);
       await this.#sendVerification(chatId, chatName, userId, userName);
     } else {
-      this.#log(`Skipped ${userName} in ${chatName}: auto-approve disabled`, chatName);
+      this.#log('Skipped: auto-approve disabled', chatName, userName);
     }
   }
 
@@ -251,7 +257,7 @@ export class Telespam {
         correctAnswerIndex,
       });
     } catch {
-      this.#logError(`Failed to send verification to ${chatName}`, chatName);
+      this.#logError(`Failed to send verification`, chatName, userName);
     }
   }
 
@@ -307,18 +313,12 @@ export class Telespam {
       } else {
         // All questions answered correctly
         this.#statsManager.record(pending.chatId, 'approved');
-        this.#log(
-          `Verification passed: ${pending.userName} in ${pending.chatName}`,
-          pending.chatName,
-        );
+        this.#log('Verification passed', pending.chatName, pending.userName);
       }
     } else {
       this.#statsManager.record(pending.chatId, 'declined');
       await this.#kickUser(pending.chatId, pending.chatName, targetUserId, pending.userName);
-      this.#log(
-        `Verification failed: ${pending.userName} in ${pending.chatName}`,
-        pending.chatName,
-      );
+      this.#log('Verification failed', pending.chatName, pending.userName);
     }
   }
 
@@ -330,7 +330,7 @@ export class Telespam {
     this.#statsManager.record(chatId, 'declined');
     await this.#bot.api.deleteMessage(chatId, pending.messageId).catch(() => {});
     await this.#kickUser(chatId, pending.chatName, userId, pending.userName);
-    this.#log(`Verification timeout: ${pending.userName} in ${pending.chatName}`, pending.chatName);
+    this.#log('Verification timeout', pending.chatName, pending.userName);
   }
 
   #clearVerification(chatId: number, userId: number): void {
@@ -364,7 +364,7 @@ export class Telespam {
       await this.#bot.api.banChatMember(chatId, userId);
       await this.#bot.api.unbanChatMember(chatId, userId).catch(() => {});
     } catch {
-      this.#logError(`Failed to kick ${userName} from ${chatName}`, chatName);
+      this.#logError('Failed to kick', chatName, userName);
     }
   }
 
@@ -428,7 +428,7 @@ export class Telespam {
         this.#bot.api.deleteMessage(chatId, msg.message_id).catch(() => {});
       }, 60_000);
     } catch {
-      this.#logError(`Failed to send decline notification to ${chatName}`, chatName);
+      this.#logError(`Failed to send decline notification`, chatName);
     }
   }
 
@@ -469,7 +469,7 @@ export class Telespam {
       try {
         await this.#bot.api.sendMessage(chatId, text);
       } catch {
-        this.#logError(`Failed to send daily report to chat ${chatId}`);
+        this.#logError(`Failed to send daily report`, this.#chatNames.get(chatId));
       }
     }
   }
