@@ -1,6 +1,3 @@
-import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-
 import { shuffle } from 'fast-shuffle';
 import { Bot, InlineKeyboard } from 'grammy';
 import type { ChatJoinRequest, User } from 'grammy/types';
@@ -8,6 +5,7 @@ import i18next, { type TFunction } from 'i18next';
 
 import enLocale from './locales/en.json';
 import zhLocale from './locales/zh.json';
+import { StatsManager } from './stats';
 
 /** Supported languages. */
 export type Language = 'en' | 'zh';
@@ -83,8 +81,7 @@ export class Telespam {
       correctAnswerIndex: number;
     }
   >();
-  #stats = new Map<number, { approved: number; declined: number }>();
-  #statsFile = '';
+  #statsManager!: StatsManager;
   #midnightTimer: NodeJS.Timeout | null = null;
 
   constructor(options: TelespamOptions) {
@@ -116,10 +113,7 @@ export class Telespam {
     // Fetch bot username from API for log prefix
     const me = await this.#bot.api.getMe();
     this.#botName = me.username;
-    this.#statsFile = `${tmpdir()}/telespam-stats-${this.#botName}.json`;
-
-    // Restore persisted stats from previous run (survives process restart)
-    this.#restoreStats();
+    this.#statsManager = new StatsManager(this.#botName);
 
     this.#bot.on('chat_join_request', (ctx) => this.#handleRequest(ctx.chatJoinRequest));
     this.#bot.on('callback_query:data', (ctx) => this.#handleCallback(ctx));
@@ -172,7 +166,7 @@ export class Telespam {
 
     if (this.#requireProfilePhoto && !(await this.#hasProfilePhoto(userId))) {
       await this.#bot.api.declineChatJoinRequest(chatId, userId);
-      this.#recordStats(chatId, 'declined');
+      this.#statsManager.record(chatId, 'declined');
       await this.#notifyDecline(chatId, userId, userName, chatName, this.#t('decline.noPhoto'));
       return;
     }
@@ -181,7 +175,7 @@ export class Telespam {
       const matched = this.#checkNameBlacklist(req.from);
       if (matched) {
         await this.#bot.api.declineChatJoinRequest(chatId, userId);
-        this.#recordStats(chatId, 'declined');
+        this.#statsManager.record(chatId, 'declined');
         this.#log(`Name blacklisted: ${userName} (keyword: ${matched})`, chatName);
         await this.#notifyDecline(chatId, userId, userName, chatName, this.#t('decline.blacklist'));
         return;
@@ -192,7 +186,7 @@ export class Telespam {
       const matched = await this.#checkBioBlacklist(userId);
       if (matched) {
         await this.#bot.api.declineChatJoinRequest(chatId, userId);
-        this.#recordStats(chatId, 'declined');
+        this.#statsManager.record(chatId, 'declined');
         this.#log(`Bio blacklisted: ${userName} (keyword: ${matched})`, chatName);
         await this.#notifyDecline(chatId, userId, userName, chatName, this.#t('decline.blacklist'));
         return;
@@ -216,7 +210,7 @@ export class Telespam {
     questionIndex: number = 0,
   ): Promise<void> {
     if (this.#verification.length === 0) {
-      this.#recordStats(chatId, 'approved');
+      this.#statsManager.record(chatId, 'approved');
       return;
     }
 
@@ -315,14 +309,14 @@ export class Telespam {
         );
       } else {
         // All questions answered correctly
-        this.#recordStats(pending.chatId, 'approved');
+        this.#statsManager.record(pending.chatId, 'approved');
         this.#log(
           `Verification passed: ${pending.userName} in ${pending.chatName}`,
           pending.chatName,
         );
       }
     } else {
-      this.#recordStats(pending.chatId, 'declined');
+      this.#statsManager.record(pending.chatId, 'declined');
       await this.#kickUser(pending.chatId, pending.chatName, targetUserId, pending.userName);
       this.#log(
         `Verification failed: ${pending.userName} in ${pending.chatName}`,
@@ -336,7 +330,7 @@ export class Telespam {
     if (!pending) return;
 
     this.#clearVerification(chatId, userId);
-    this.#recordStats(chatId, 'declined');
+    this.#statsManager.record(chatId, 'declined');
     await this.#bot.api.deleteMessage(chatId, pending.messageId).catch(() => {});
     await this.#kickUser(chatId, pending.chatName, userId, pending.userName);
     this.#log(`Verification timeout: ${pending.userName} in ${pending.chatName}`, pending.chatName);
@@ -437,38 +431,6 @@ export class Telespam {
     return name[0] + '*'.repeat(Math.min(name.length - 2, 3)) + name[name.length - 1];
   }
 
-  // ---- stats ----
-
-  #recordStats(chatId: number, type: 'approved' | 'declined'): void {
-    let entry = this.#stats.get(chatId);
-    if (!entry) {
-      entry = { approved: 0, declined: 0 };
-      this.#stats.set(chatId, entry);
-    }
-    entry[type]++;
-    this.#persistStats();
-  }
-
-  #persistStats(): void {
-    try {
-      writeFileSync(this.#statsFile, JSON.stringify([...this.#stats]), 'utf-8');
-    } catch {
-      // best-effort: ignore write failures
-    }
-  }
-
-  #restoreStats(): void {
-    try {
-      if (existsSync(this.#statsFile)) {
-        const raw = readFileSync(this.#statsFile, 'utf-8');
-        const entries: [number, { approved: number; declined: number }][] = JSON.parse(raw);
-        this.#stats = new Map(entries);
-      }
-    } catch {
-      // best-effort: ignore corrupted/missing file
-    }
-  }
-
   #scheduleMidnight(): void {
     const now = new Date();
     const midnight = new Date(now);
@@ -483,14 +445,7 @@ export class Telespam {
   }
 
   async #sendDailyReports(): Promise<void> {
-    const snapshot = new Map(this.#stats);
-    this.#stats.clear();
-    try {
-      unlinkSync(this.#statsFile);
-    } catch {
-      /* ignore */
-    }
-
+    const snapshot = this.#statsManager.snapshot();
     if (snapshot.size === 0) return;
 
     for (const [chatId, stat] of snapshot) {
