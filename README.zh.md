@@ -1,8 +1,23 @@
 [English](README.md) | [中文](README.zh.md)
 
-# telespam
+# 🤖 Telespam
 
-自托管 Telegram 反垃圾广告方案
+[![npm version](https://badgen.net/npm/v/telespam)](https://www.npmjs.com/package/telespam)
+[![npm downloads](https://badgen.net/npm/dm/telespam)](https://www.npmjs.com/package/telespam)
+[![license](https://badgen.net/npm/license/telespam)](https://github.com/guoyunhe/telespam/blob/main/LICENSE)
+[![node version](https://badgen.net/npm/node/telespam)](https://nodejs.org/)
+
+自托管 Telegram 反垃圾广告机器人 — 通过关键词过滤、头像检查与多步验证，守护社群清洁。
+
+## 功能特性
+
+- 🔑 **关键词黑名单** — 拦截名称或简介中包含黑名单关键词的加群申请（不区分大小写）
+- 🖼️ **头像检查** — 要求用户必须设置头像才能加入
+- ✅ **自动批准** — 自动批准通过所有规则的加群申请
+- ❓ **验证问题** — 批准后通过单选或多步问答验证用户身份
+- 🌐 **多语言** — 内置英文和中文 Bot 消息
+- 🔄 **多实例** — 单个配置文件运行多个 Bot
+- 🐧 **Systemd 服务** — 一条命令即可在 Linux 服务器上安装部署
 
 ## 前置条件
 

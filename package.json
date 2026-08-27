@@ -1,11 +1,19 @@
 {
   "name": "telespam",
   "version": "0.7.0",
-  "description": "self-host anti-spam solution for telegram",
+  "description": "Self-hosted anti-spam bot for Telegram groups — keyword filtering, profile photo check, multi-step verification & auto-approval",
   "keywords": [
     "anti-spam",
-    "self-host",
-    "telegram"
+    "chat-join-request",
+    "grammy",
+    "group-management",
+    "keyword-filtering",
+    "moderation",
+    "self-hosted",
+    "spam-filter",
+    "telegram",
+    "telegram-bot",
+    "verification"
   ],
   "homepage": "https://github.com/guoyunhe/telespam#readme",
   "bugs": {

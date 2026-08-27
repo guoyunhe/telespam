@@ -1,8 +1,23 @@
 [English](README.md) | [中文](README.zh.md)
 
-# telespam
+# 🤖 Telespam
 
-self-host anti-spam solution for telegram
+[![npm version](https://badgen.net/npm/v/telespam)](https://www.npmjs.com/package/telespam)
+[![npm downloads](https://badgen.net/npm/dm/telespam)](https://www.npmjs.com/package/telespam)
+[![license](https://badgen.net/npm/license/telespam)](https://github.com/guoyunhe/telespam/blob/main/LICENSE)
+[![node version](https://badgen.net/npm/node/telespam)](https://nodejs.org/)
+
+Self-hosted anti-spam bot for Telegram groups — keeps your community clean with keyword filtering, profile photo checks & multi-step verification.
+
+## Features
+
+- 🔑 **Keyword Blacklist** — Block join requests whose name or bio contains blacklisted keywords (case-insensitive)
+- 🖼️ **Profile Photo Check** — Require users to have a profile photo before joining
+- ✅ **Auto-Approve** — Automatically approve requests that pass all rules
+- ❓ **Verification Questions** — Challenge users with single or multi-step quizzes after approval
+- 🌐 **Multi-Language** — Built-in English and Chinese (中文) bot messages
+- 🔄 **Multi-Instance** — Run multiple bots from a single config file
+- 🐧 **Systemd Service** — One-command install for systemd-based Linux servers
 
 ## Prerequisites
 
@@ -114,6 +129,10 @@ To run multiple bots with a single config file, use a JSON array. Each bot usern
   }
 ]
 ```
+
+## Config File Priority
+
+`cwd/telespam.json` takes precedence over `~/.config/telespam.json`. The two files are not merged.
 
 ## Systemd Service
 
