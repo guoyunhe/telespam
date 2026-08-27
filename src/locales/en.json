@@ -5,8 +5,7 @@
     "message": "🚫 Join request declined\n\n<a href=\"tg://user?id={{userId}}\">{{- name}}</a> (ID: <code>{{userId}}</code>)\nReason: {{- reason}}"
   },
   "verification": {
-    "timer": "⏳ You have {{seconds}} seconds to answer.",
-    "kickWarning": "✗ Wrong answer or timeout → kicked from the group."
+    "message": "{{- mention}}, {{- question}}\n\n⏳ You have {{seconds}} seconds to answer.\n✗ Wrong answer or timeout → kicked from the group."
   },
   "callback": {
     "notForYou": "This is not for you",
@@ -15,8 +14,6 @@
     "wrong": "❌ Wrong answer"
   },
   "report": {
-    "title": "📊 Daily report",
-    "approved": "✅ Approved: {{count}}",
-    "declined": "🚫 Declined: {{count}}"
+    "message": "📊 Daily report\n✅ Approved: {{approved}}\n🚫 Declined: {{declined}}"
   }
 }

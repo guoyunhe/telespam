@@ -232,11 +232,11 @@ export class Telespam {
     }
 
     const mention = `<a href="tg://user?id=${userId}">${this.#escapeHtml(userName)}</a>`;
-    const text =
-      `${mention}, ${this.#escapeHtml(question)}\n` +
-      `\n` +
-      `${this.#t('verification.timer', { seconds: timeoutSec })}\n` +
-      `${this.#t('verification.kickWarning')}`;
+    const text = this.#t('verification.message', {
+      mention,
+      question: this.#escapeHtml(question),
+      seconds: timeoutSec,
+    });
 
     try {
       const msg = await this.#bot.api.sendMessage(chatId, text, {
@@ -470,11 +470,10 @@ export class Telespam {
     if (snapshot.size === 0) return;
 
     for (const [chatId, stat] of snapshot) {
-      const text = [
-        this.#t('report.title'),
-        this.#t('report.approved', { count: stat.approved }),
-        this.#t('report.declined', { count: stat.declined }),
-      ].join('\n');
+      const text = this.#t('report.message', {
+        approved: stat.approved,
+        declined: stat.declined,
+      });
 
       try {
         await this.#bot.api.sendMessage(chatId, text);

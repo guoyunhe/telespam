@@ -5,8 +5,7 @@
     "message": "🚫 加群申请被拒绝\n\n<a href=\"tg://user?id={{userId}}\">{{- name}}</a> (ID: <code>{{userId}}</code>)\n原因: {{- reason}}"
   },
   "verification": {
-    "timer": "⏳ 请在 {{seconds}} 秒内回答问题。",
-    "kickWarning": "✗ 回答错误或超时将被移出群组。"
+    "message": "{{- mention}}, {{- question}}\n\n⏳ 请在 {{seconds}} 秒内回答问题。\n✗ 回答错误或超时将被移出群组。"
   },
   "callback": {
     "notForYou": "这不是给你的",
@@ -15,8 +14,6 @@
     "wrong": "❌ 回答错误"
   },
   "report": {
-    "title": "📊 每日统计",
-    "approved": "✅ 通过: {{count}}",
-    "declined": "🚫 拦截: {{count}}"
+    "message": "📊 每日统计\n✅ 通过: {{approved}}\n🚫 拦截: {{declined}}"
   }
 }
