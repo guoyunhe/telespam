@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Daily stats are persisted to a tmp file (`/tmp/telespam-stats-<bot>.json`) so they survive unexpected process restarts.
+
 ## [0.6.0] - 2026-08-25
 
 ### Added

@@ -1,3 +1,6 @@
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+
 import { shuffle } from 'fast-shuffle';
 import { Bot, InlineKeyboard } from 'grammy';
 import type { ChatJoinRequest, User } from 'grammy/types';
@@ -81,6 +84,7 @@ export class Telespam {
     }
   >();
   #stats = new Map<number, { approved: number; declined: number }>();
+  #statsFile = '';
   #midnightTimer: NodeJS.Timeout | null = null;
 
   constructor(options: TelespamOptions) {
@@ -112,6 +116,10 @@ export class Telespam {
     // Fetch bot username from API for log prefix
     const me = await this.#bot.api.getMe();
     this.#botName = me.username;
+    this.#statsFile = `${tmpdir()}/telespam-stats-${this.#botName}.json`;
+
+    // Restore persisted stats from previous run (survives process restart)
+    this.#restoreStats();
 
     this.#bot.on('chat_join_request', (ctx) => this.#handleRequest(ctx.chatJoinRequest));
     this.#bot.on('callback_query:data', (ctx) => this.#handleCallback(ctx));
@@ -438,6 +446,27 @@ export class Telespam {
       this.#stats.set(chatId, entry);
     }
     entry[type]++;
+    this.#persistStats();
+  }
+
+  #persistStats(): void {
+    try {
+      writeFileSync(this.#statsFile, JSON.stringify([...this.#stats]), 'utf-8');
+    } catch {
+      // best-effort: ignore write failures
+    }
+  }
+
+  #restoreStats(): void {
+    try {
+      if (existsSync(this.#statsFile)) {
+        const raw = readFileSync(this.#statsFile, 'utf-8');
+        const entries: [number, { approved: number; declined: number }][] = JSON.parse(raw);
+        this.#stats = new Map(entries);
+      }
+    } catch {
+      // best-effort: ignore corrupted/missing file
+    }
   }
 
   #scheduleMidnight(): void {
@@ -456,6 +485,11 @@ export class Telespam {
   async #sendDailyReports(): Promise<void> {
     const snapshot = new Map(this.#stats);
     this.#stats.clear();
+    try {
+      unlinkSync(this.#statsFile);
+    } catch {
+      /* ignore */
+    }
 
     if (snapshot.size === 0) return;
 
