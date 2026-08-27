@@ -2,8 +2,7 @@
   "decline": {
     "noPhoto": "no profile photo",
     "blacklist": "blacklisted keyword is detected",
-    "title": "🚫 Join request declined",
-    "reason": "Reason"
+    "message": "🚫 Join request declined\n\n<a href=\"tg://user?id={{userId}}\">{{- name}}</a> (ID: <code>{{userId}}</code>)\nReason: {{- reason}}"
   },
   "verification": {
     "timer": "⏳ You have {{seconds}} seconds to answer.",

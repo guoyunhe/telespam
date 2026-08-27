@@ -2,8 +2,7 @@
   "decline": {
     "noPhoto": "无头像",
     "blacklist": "检测到黑名单关键字",
-    "title": "🚫 加群申请被拒绝",
-    "reason": "原因"
+    "message": "🚫 加群申请被拒绝\n\n<a href=\"tg://user?id={{userId}}\">{{- name}}</a> (ID: <code>{{userId}}</code>)\n原因: {{- reason}}"
   },
   "verification": {
     "timer": "⏳ 请在 {{seconds}} 秒内回答问题。",

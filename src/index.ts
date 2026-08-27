@@ -412,12 +412,11 @@ export class Telespam {
     chatName: string,
     reason: string,
   ): Promise<void> {
-    const maskedName = this.#maskName(userName);
-    const text =
-      `${this.#t('decline.title')}\n\n` +
-      `<a href="tg://user?id=${userId}">${this.#escapeHtml(maskedName)}</a>` +
-      ` (ID: <code>${userId}</code>)\n` +
-      `${this.#t('decline.reason')}: ${reason}`;
+    const text = this.#t('decline.message', {
+      name: this.#escapeHtml(this.#maskName(userName)),
+      userId,
+      reason,
+    });
 
     try {
       const msg = await this.#bot.api.sendMessage(chatId, text, { parse_mode: 'HTML' });
