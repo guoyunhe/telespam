@@ -114,6 +114,7 @@ export class Telespam {
     const me = await this.#bot.api.getMe();
     this.#botName = me.username;
     this.#statsManager = new StatsManager(this.#botName);
+    await this.#statsManager.init();
 
     this.#bot.on('chat_join_request', (ctx) => this.#handleRequest(ctx.chatJoinRequest));
     this.#bot.on('callback_query:data', (ctx) => this.#handleCallback(ctx));
@@ -445,7 +446,7 @@ export class Telespam {
   }
 
   async #sendDailyReports(): Promise<void> {
-    const snapshot = this.#statsManager.snapshot();
+    const snapshot = await this.#statsManager.snapshot();
     if (snapshot.size === 0) return;
 
     for (const [chatId, stat] of snapshot) {

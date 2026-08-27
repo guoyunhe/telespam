@@ -1,5 +1,6 @@
-import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { readFile, unlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 /** Per-chat approval/decline counters persisted across restarts. */
 export class StatsManager {
@@ -7,8 +8,12 @@ export class StatsManager {
   #statsFile: string;
 
   constructor(botName: string) {
-    this.#statsFile = `${tmpdir()}/telespam-stats-${botName}.json`;
-    this.#restore();
+    this.#statsFile = join(tmpdir(), `telespam-stats-${botName}.json`);
+  }
+
+  /** Restore persisted stats from the previous run. Call once before using the manager. */
+  async init(): Promise<void> {
+    await this.#restore();
   }
 
   /** Record an approval or decline for a chat. */
@@ -26,11 +31,11 @@ export class StatsManager {
    * Take a snapshot of current stats, then clear in-memory state and the backing file. Returns the
    * snapshot (may be empty).
    */
-  snapshot(): Map<number, { approved: number; declined: number }> {
+  async snapshot(): Promise<Map<number, { approved: number; declined: number }>> {
     const snap = new Map(this.#stats);
     this.#stats.clear();
     try {
-      unlinkSync(this.#statsFile);
+      await unlink(this.#statsFile);
     } catch {
       /* ignore */
     }
@@ -39,21 +44,19 @@ export class StatsManager {
 
   // ---- private ----
 
-  #persist(): void {
+  async #persist(): Promise<void> {
     try {
-      writeFileSync(this.#statsFile, JSON.stringify([...this.#stats]), 'utf-8');
+      await writeFile(this.#statsFile, JSON.stringify([...this.#stats]), 'utf-8');
     } catch {
       // best-effort: ignore write failures
     }
   }
 
-  #restore(): void {
+  async #restore(): Promise<void> {
     try {
-      if (existsSync(this.#statsFile)) {
-        const raw = readFileSync(this.#statsFile, 'utf-8');
-        const entries: [number, { approved: number; declined: number }][] = JSON.parse(raw);
-        this.#stats = new Map(entries);
-      }
+      const raw = await readFile(this.#statsFile, 'utf-8');
+      const entries: [number, { approved: number; declined: number }][] = JSON.parse(raw);
+      this.#stats = new Map(entries);
     } catch {
       // best-effort: ignore corrupted/missing file
     }
