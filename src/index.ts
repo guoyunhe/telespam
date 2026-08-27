@@ -1,3 +1,4 @@
+import { retry } from '@guoyunhe/retry';
 import { shuffle } from 'fast-shuffle';
 import { Bot, InlineKeyboard } from 'grammy';
 import type { ChatJoinRequest, User } from 'grammy/types';
@@ -419,7 +420,10 @@ export class Telespam {
     });
 
     try {
-      const msg = await this.#bot.api.sendMessage(chatId, text, { parse_mode: 'HTML' });
+      const msg = await retry(
+        () => this.#bot.api.sendMessage(chatId, text, { parse_mode: 'HTML' }),
+        { retries: 3, retryDelay: 1000 },
+      );
       setTimeout(() => {
         this.#bot.api.deleteMessage(chatId, msg.message_id).catch(() => {});
       }, 60_000);
@@ -465,7 +469,7 @@ export class Telespam {
       try {
         await this.#bot.api.sendMessage(chatId, text);
       } catch {
-        // ignore — chat may not be accessible
+        this.#logError(`Failed to send daily report to chat ${chatId}`);
       }
     }
   }
