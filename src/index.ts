@@ -116,7 +116,7 @@ export class Telespam {
     this.#statsManager = new StatsManager(this.#botName);
     await this.#statsManager.init();
 
-    this.#bot.on('chat_join_request', (ctx) => this.#handleRequest(ctx.chatJoinRequest));
+    this.#bot.on('chat_join_request', (ctx) => this.#handleRequest(ctx));
     this.#bot.on('callback_query:data', (ctx) => this.#handleCallback(ctx));
 
     this.#scheduleMidnight();
@@ -157,7 +157,8 @@ export class Telespam {
     console.error(`${prefix}${suffix} ${message}`);
   }
 
-  async #handleRequest(req: ChatJoinRequest): Promise<void> {
+  async #handleRequest(ctx: { chatJoinRequest: ChatJoinRequest }): Promise<void> {
+    const req = ctx.chatJoinRequest;
     const { id: chatId } = req.chat;
     const { id: userId } = req.from;
     const userName = req.from.last_name
@@ -166,19 +167,15 @@ export class Telespam {
     const chatName = req.chat.title || `chat ${chatId}`;
 
     if (this.#requireProfilePhoto && !(await this.#hasProfilePhoto(userId))) {
-      await this.#bot.api.declineChatJoinRequest(chatId, userId);
-      this.#statsManager.record(chatId, 'declined');
-      await this.#notifyDecline(chatId, userId, userName, chatName, this.#t('decline.noPhoto'));
+      await this.#decline(chatId, userId, userName, chatName, this.#t('decline.noPhoto'));
       return;
     }
 
     if (this.#keywordBlacklist.length > 0) {
       const matched = this.#checkNameBlacklist(req.from);
       if (matched) {
-        await this.#bot.api.declineChatJoinRequest(chatId, userId);
-        this.#statsManager.record(chatId, 'declined');
         this.#log(`Name blacklisted: ${userName} (keyword: ${matched})`, chatName);
-        await this.#notifyDecline(chatId, userId, userName, chatName, this.#t('decline.blacklist'));
+        await this.#decline(chatId, userId, userName, chatName, this.#t('decline.blacklist'));
         return;
       }
     }
@@ -186,10 +183,8 @@ export class Telespam {
     if (this.#keywordBlacklist.length > 0) {
       const matched = await this.#checkBioBlacklist(userId);
       if (matched) {
-        await this.#bot.api.declineChatJoinRequest(chatId, userId);
-        this.#statsManager.record(chatId, 'declined');
         this.#log(`Bio blacklisted: ${userName} (keyword: ${matched})`, chatName);
-        await this.#notifyDecline(chatId, userId, userName, chatName, this.#t('decline.blacklist'));
+        await this.#decline(chatId, userId, userName, chatName, this.#t('decline.blacklist'));
         return;
       }
     }
@@ -344,6 +339,18 @@ export class Telespam {
       clearTimeout(pending.timer);
       this.#pendingVerifications.delete(key);
     }
+  }
+
+  async #decline(
+    chatId: number,
+    userId: number,
+    userName: string,
+    chatName: string,
+    reason: string,
+  ): Promise<void> {
+    await this.#bot.api.declineChatJoinRequest(chatId, userId);
+    this.#statsManager.record(chatId, 'declined');
+    await this.#notifyDecline(chatId, userId, userName, chatName, reason);
   }
 
   async #kickUser(
