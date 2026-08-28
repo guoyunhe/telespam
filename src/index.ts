@@ -437,8 +437,9 @@ export class Telespam {
           this.#logError('Failed to delete decline notification', chatName);
         });
       }, 60_000);
-    } catch {
+    } catch (e) {
       this.#logError(`Failed to send decline notification`, chatName);
+      console.error(e);
     }
   }
 

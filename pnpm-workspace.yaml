@@ -1,2 +1,4 @@
 allowBuilds:
   esbuild: true
+minimumReleaseAgeExclude:
+  - '@guoyunhe/retry@1.2.0 || 1.2.1'

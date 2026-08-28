@@ -54,7 +54,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@guoyunhe/retry": "^1.1.0",
+    "@guoyunhe/retry": "^1.2.1",
     "commander": "^15.0.0",
     "fast-shuffle": "^6.2.1",
     "grammy": "^1.37.0",
