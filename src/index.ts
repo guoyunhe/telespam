@@ -73,6 +73,7 @@ export class Telespam {
   #requireProfilePhoto: boolean;
   #autoApprove: boolean;
   #keywordBlacklist: (RegExp | string)[];
+  #approvedUsers = new Map<number, Set<number>>();
   #verification: VerificationConfig[];
   #pendingVerifications = new Map<
     string,
@@ -125,6 +126,20 @@ export class Telespam {
     this.#bot.on('chat_join_request', (ctx) => this.#handleRequest(ctx));
     this.#bot.on('callback_query:data', (ctx) => this.#handleCallback(ctx));
 
+    if (this.#autoApprove) {
+      // Delete system "approved" service messages
+      this.#bot.on('message:new_chat_members', async (ctx) => {
+        const userId = ctx.message.from?.id;
+        if (userId && this.#approvedUsers.get(ctx.chat.id)?.has(userId)) {
+          try {
+            await ctx.deleteMessage();
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      });
+    }
+
     this.#scheduleMidnight();
 
     await this.#bot.start({
@@ -176,6 +191,9 @@ export class Telespam {
       : req.from.first_name;
     const chatName = req.chat.title || `chat ${chatId}`;
     this.#chatNames.set(chatId, chatName);
+    if (!this.#approvedUsers.get(chatId)?.has(userId)) {
+      this.#approvedUsers.set(chatId, new Set<number>());
+    }
 
     if (this.#requireProfilePhoto && !(await this.#hasProfilePhoto(userId))) {
       await this.#decline(chatId, userId, userName, chatName, this.#t('decline.noPhoto'));
@@ -201,6 +219,7 @@ export class Telespam {
     }
 
     if (this.#autoApprove) {
+      this.#approvedUsers.get(chatId)?.add(userId);
       await this.#bot.api.approveChatJoinRequest(chatId, userId);
       this.#log('Approved', chatName, userName);
       await this.#sendVerification(chatId, chatName, userId, userName);
@@ -260,8 +279,9 @@ export class Telespam {
         questionIndex,
         correctAnswerIndex,
       });
-    } catch {
+    } catch (e) {
       this.#logError(`Failed to send verification`, chatName, userName);
+      console.error(e);
     }
   }
 
@@ -303,8 +323,9 @@ export class Telespam {
     this.#clearVerification(chatId, targetUserId);
     try {
       await this.#bot.api.deleteMessage(pending.chatId, pending.messageId);
-    } catch {
+    } catch (e) {
       this.#logError('Failed to delete verification message', pending.chatName);
+      console.error(e);
     }
 
     if (isCorrect) {
@@ -338,8 +359,9 @@ export class Telespam {
     this.#statsManager.record(chatId, 'declined');
     try {
       await this.#bot.api.deleteMessage(chatId, pending.messageId);
-    } catch {
+    } catch (e) {
       this.#logError('Failed to delete verification message', pending.chatName);
+      console.error(e);
     }
     await this.#kickUser(chatId, pending.chatName, userId, pending.userName);
     this.#log('Verification timeout', pending.chatName, pending.userName);
@@ -365,8 +387,9 @@ export class Telespam {
       await this.#bot.api.declineChatJoinRequest(chatId, userId);
       this.#statsManager.record(chatId, 'declined');
       await this.#notifyDecline(chatId, userId, userName, chatName, reason);
-    } catch {
+    } catch (e) {
       this.#logError('Failed to decline join request', chatName, userName);
+      console.error(e);
       return;
     }
   }
@@ -380,8 +403,9 @@ export class Telespam {
     try {
       await this.#bot.api.banChatMember(chatId, userId);
       await this.#bot.api.unbanChatMember(chatId, userId).catch(() => {});
-    } catch {
+    } catch (e) {
       this.#logError('Failed to kick', chatName, userName);
+      console.error(e);
     }
   }
 
@@ -402,8 +426,9 @@ export class Telespam {
       if ('bio' in chat && chat.bio) {
         return this.#matchBlacklist(chat.bio);
       }
-    } catch {
+    } catch (e) {
       // ignore — bio check is best-effort
+      console.error(e);
     }
 
     return null;
@@ -425,7 +450,8 @@ export class Telespam {
     try {
       const { total_count } = await this.#bot.api.getUserProfilePhotos(userId);
       return total_count > 0;
-    } catch {
+    } catch (e) {
+      console.error(e);
       return false;
     }
   }
