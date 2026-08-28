@@ -2,10 +2,10 @@
   "decline": {
     "noPhoto": "无头像",
     "blacklist": "检测到黑名单关键字",
-    "message": "🚫 加群申请被拒绝\n\n<a href=\"tg://user?id={{userId}}\">{{- name}}</a> (ID: <code>{{userId}}</code>)\n原因: {{- reason}}"
+    "message": "<a href=\"tg://user?id={{userId}}\">{{- name}}</a> 的加群请求被拒绝\n原因: {{- reason}}"
   },
   "verification": {
-    "message": "{{- mention}}, {{- question}}\n\n⏳ 请在 {{seconds}} 秒内回答问题。\n✗ 回答错误或超时将被移出群组。"
+    "message": "⏳ <a href=\"tg://user?id={{userId}}\">{{- userName}}</a>，请在 {{seconds}} 秒内回答问题。✗ 回答错误或超时将被移出群组。\n\n{{- question}}"
   },
   "callback": {
     "notForYou": "这不是给你的",

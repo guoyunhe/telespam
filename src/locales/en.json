@@ -2,10 +2,10 @@
   "decline": {
     "noPhoto": "no profile photo",
     "blacklist": "blacklisted keyword is detected",
-    "message": "🚫 Join request declined\n\n<a href=\"tg://user?id={{userId}}\">{{- name}}</a> (ID: <code>{{userId}}</code>)\nReason: {{- reason}}"
+    "message": "<a href=\"tg://user?id={{userId}}\">{{- name}}</a>'s join request was declined\nReason: {{- reason}}"
   },
   "verification": {
-    "message": "{{- mention}}, {{- question}}\n\n⏳ You have {{seconds}} seconds to answer.\n✗ Wrong answer or timeout → kicked from the group."
+    "message": "⏳ <a href=\"tg://user?id={{userId}}\">{{- userName}}</a>, you have {{seconds}} seconds to answer. ✗ Wrong answer or timeout → kicked.\n\n{{- question}}"
   },
   "callback": {
     "notForYou": "This is not for you",

@@ -235,9 +235,9 @@ export class Telespam {
       keyboard.text(options[i], `v|${userId}|${i}`).row();
     }
 
-    const mention = `<a href="tg://user?id=${userId}">${userName}</a>`;
     const text = this.#t('verification.message', {
-      mention,
+      userId,
+      userName,
       question,
       seconds: timeoutSec,
     });
