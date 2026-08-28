@@ -231,10 +231,10 @@ export class Telespam {
       keyboard.text(options[i], `v|${userId}|${i}`).row();
     }
 
-    const mention = `<a href="tg://user?id=${userId}">${this.#escapeHtml(userName)}</a>`;
+    const mention = `<a href="tg://user?id=${userId}">${userName}</a>`;
     const text = this.#t('verification.message', {
       mention,
-      question: this.#escapeHtml(question),
+      question,
       seconds: timeoutSec,
     });
 
@@ -427,7 +427,7 @@ export class Telespam {
     reason: string,
   ): Promise<void> {
     const text = this.#t('decline.message', {
-      name: this.#escapeHtml(this.#maskName(userName)),
+      name: userName,
       userId,
       reason,
     });
@@ -446,16 +446,6 @@ export class Telespam {
       this.#logError(`Failed to send decline notification`, chatName);
       console.error(e);
     }
-  }
-
-  #escapeHtml(text: string): string {
-    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
-
-  #maskName(name: string): string {
-    if (name.length <= 1) return name;
-    if (name.length === 2) return name[0] + '*';
-    return name[0] + '*'.repeat(Math.min(name.length - 2, 3)) + name[name.length - 1];
   }
 
   #scheduleMidnight(): void {
