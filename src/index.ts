@@ -357,9 +357,14 @@ export class Telespam {
     chatName: string,
     reason: string,
   ): Promise<void> {
-    await this.#bot.api.declineChatJoinRequest(chatId, userId);
-    this.#statsManager.record(chatId, 'declined');
-    await this.#notifyDecline(chatId, userId, userName, chatName, reason);
+    try {
+      await this.#bot.api.declineChatJoinRequest(chatId, userId);
+      this.#statsManager.record(chatId, 'declined');
+      await this.#notifyDecline(chatId, userId, userName, chatName, reason);
+    } catch {
+      this.#logError('Failed to decline join request', chatName, userName);
+      return;
+    }
   }
 
   async #kickUser(
