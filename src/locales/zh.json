@@ -5,7 +5,7 @@
     "message": "<a href=\"tg://user?id={{userId}}\">{{- name}}</a> 的加群请求被拒绝\n原因: {{- reason}}"
   },
   "verification": {
-    "message": "⏳ <a href=\"tg://user?id={{userId}}\">{{- userName}}</a>，请在 {{seconds}} 秒内回答问题。✗ 回答错误或超时将被移出群组。\n\n{{- question}}"
+    "message": "⏳ <a href=\"tg://user?id={{userId}}\">{{- userName}}</a>，请在 {{seconds}} 秒内回答问题。✗ 回答错误或超时将被移出群组。\n\n<b>{{- question}}</b>"
   },
   "callback": {
     "notForYou": "这不是给你的",
