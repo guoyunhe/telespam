@@ -44,14 +44,14 @@ sudo npm i -g telespam
 }
 ```
 
-| 选项                  | 类型                             | 默认值   | 说明                                                        |
-| --------------------- | -------------------------------- | -------- | ----------------------------------------------------------- |
-| `language`            | `"en"` \| `"zh"`                 | `"en"`   | Bot 消息语言                                                |
-| `apiKey`              | `string`                         | _(必填)_ | 从 [@BotFather](https://t.me/botfather) 获取的 Bot API 密钥 |
-| `requireProfilePhoto` | `boolean`                        | `false`  | 要求用户必须设置头像                                        |
-| `autoApprove`         | `boolean`                        | `false`  | 自动批准通过所有规则的加群申请                              |
-| `keywordBlacklist`    | `string[]`                       | `[]`     | 名称与简介黑名单关键词（不区分大小写）                      |
-| `verification`        | `object` \| `object[]` \| `null` | `null`   | 批准后发送的验证问题                                        |
+| 选项                  | 类型                             | 默认值   | 说明                                                                            |
+| --------------------- | -------------------------------- | -------- | ------------------------------------------------------------------------------- |
+| `language`            | `"en"` \| `"zh"`                 | `"en"`   | Bot 消息语言                                                                    |
+| `apiKey`              | `string`                         | _(必填)_ | 从 [@BotFather](https://t.me/botfather) 获取的 Bot API 密钥                     |
+| `requireProfilePhoto` | `boolean`                        | `false`  | 要求用户必须设置头像                                                            |
+| `autoApprove`         | `boolean`                        | `false`  | 自动批准通过所有规则的加群申请                                                  |
+| `keywordBlacklist`    | `string[]`                       | `[]`     | 名称与简介黑名单关键词（不区分大小写）。用 `/` 包裹表示正则（如 `/^spam\d+$/`） |
+| `verification`        | `object` \| `object[]` \| `null` | `null`   | 批准后发送的验证问题                                                            |
 
 #### 验证问题
 

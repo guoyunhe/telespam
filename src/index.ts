@@ -21,8 +21,12 @@ export interface TelespamOptions {
   requireProfilePhoto?: boolean;
   /** Whether to auto-approve join requests that pass all rules (default: false) */
   autoApprove?: boolean;
-  /** Blacklisted keywords in first_name, last_name, username, and bio (case-insensitive) */
-  keywordBlacklist?: string[];
+  /**
+   * Blacklisted keywords / regex patterns in first_name, last_name, username, and bio
+   * (case-insensitive). `RegExp` objects are tested with `.test()`, plain strings are matched via
+   * `.includes()`.
+   */
+  keywordBlacklist?: (RegExp | string)[];
   /**
    * Verification question(s) sent to users after approval. Can be a single config or an array of
    * configs for multi-step verification.
@@ -68,7 +72,7 @@ export class Telespam {
   #botName: string;
   #requireProfilePhoto: boolean;
   #autoApprove: boolean;
-  #keywordBlacklist: string[];
+  #keywordBlacklist: (RegExp | string)[];
   #verification: VerificationConfig[];
   #pendingVerifications = new Map<
     string,
@@ -103,7 +107,7 @@ export class Telespam {
 
     this.#requireProfilePhoto = options.requireProfilePhoto ?? false;
     this.#autoApprove = options.autoApprove ?? false;
-    this.#keywordBlacklist = (options.keywordBlacklist ?? []).map((k) => k.toLowerCase());
+    this.#keywordBlacklist = options.keywordBlacklist ?? [];
     this.#verification = normalizeVerification(options.verification);
   }
 
@@ -381,32 +385,39 @@ export class Telespam {
     }
   }
 
-  #checkNameBlacklist(user: User): string | null {
+  #checkNameBlacklist(user: User): RegExp | string | null {
     const fields = [user.first_name, user.last_name, user.username].filter(Boolean) as string[];
 
     for (const field of fields) {
-      const lower = field.toLowerCase();
-      for (const keyword of this.#keywordBlacklist) {
-        if (lower.includes(keyword)) return keyword;
-      }
+      const matched = this.#matchBlacklist(field);
+      if (matched) return matched;
     }
 
     return null;
   }
 
-  async #checkBioBlacklist(userId: number): Promise<string | null> {
+  async #checkBioBlacklist(userId: number): Promise<RegExp | string | null> {
     try {
       const chat = await this.#bot.api.getChat(userId);
       if ('bio' in chat && chat.bio) {
-        const lower = chat.bio.toLowerCase();
-        for (const keyword of this.#keywordBlacklist) {
-          if (lower.includes(keyword)) return keyword;
-        }
+        return this.#matchBlacklist(chat.bio);
       }
     } catch {
       // ignore — bio check is best-effort
     }
 
+    return null;
+  }
+
+  /** Match a field against blacklist entries. Returns the matched pattern or null. */
+  #matchBlacklist(field: string): RegExp | string | null {
+    for (const keyword of this.#keywordBlacklist) {
+      if (keyword instanceof RegExp) {
+        if (keyword.test(field)) return keyword;
+      } else if (field.toLowerCase().includes(keyword.toLowerCase())) {
+        return keyword;
+      }
+    }
     return null;
   }
 

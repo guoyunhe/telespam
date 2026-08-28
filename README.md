@@ -44,14 +44,14 @@ Create a `~/.config/telespam.json` file in the working directory:
 }
 ```
 
-| Option                | Type                             | Default      | Description                                            |
-| --------------------- | -------------------------------- | ------------ | ------------------------------------------------------ |
-| `language`            | `"en"` \| `"zh"`                 | `"en"`       | Language for bot messages                              |
-| `apiKey`              | `string`                         | _(required)_ | Bot API key from [@BotFather](https://t.me/botfather)  |
-| `requireProfilePhoto` | `boolean`                        | `false`      | Require users to have a profile photo                  |
-| `autoApprove`         | `boolean`                        | `false`      | Auto-approve requests that pass all rules              |
-| `keywordBlacklist`    | `string[]`                       | `[]`         | Blacklisted keywords in names & bio (case-insensitive) |
-| `verification`        | `object` \| `object[]` \| `null` | `null`       | Verification question(s) sent after approval           |
+| Option                | Type                             | Default      | Description                                                                                          |
+| --------------------- | -------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------- |
+| `language`            | `"en"` \| `"zh"`                 | `"en"`       | Language for bot messages                                                                            |
+| `apiKey`              | `string`                         | _(required)_ | Bot API key from [@BotFather](https://t.me/botfather)                                                |
+| `requireProfilePhoto` | `boolean`                        | `false`      | Require users to have a profile photo                                                                |
+| `autoApprove`         | `boolean`                        | `false`      | Auto-approve requests that pass all rules                                                            |
+| `keywordBlacklist`    | `string[]`                       | `[]`         | Blacklisted keywords in names & bio (case-insensitive). Wrap with `/` for regex (e.g. `/^spam\d+$/`) |
+| `verification`        | `object` \| `object[]` \| `null` | `null`       | Verification question(s) sent after approval                                                         |
 
 #### Verification
 

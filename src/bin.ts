@@ -61,11 +61,19 @@ program
 program.action(async () => {
   const configs = loadConfig();
 
-  // Validate all configs
+  // Validate all configs and convert /pattern/ to RegExp
   for (let i = 0; i < configs.length; i++) {
     if (!configs[i].apiKey) {
       console.error(`Missing apiKey in config[${i}] of telespam.json`);
       process.exit(1);
+    }
+    if (configs[i].keywordBlacklist) {
+      configs[i].keywordBlacklist = (configs[i].keywordBlacklist as string[]).map((k) => {
+        if (k.startsWith('/') && k.endsWith('/') && k.length > 1) {
+          return new RegExp(k.slice(1, -1), 'i');
+        }
+        return k;
+      });
     }
   }
 
