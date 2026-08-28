@@ -7,6 +7,12 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - `keywordBlacklist` now supports regular expressions. Wrap patterns with `/` (e.g. `/^spam\d+$/`) to use regex matching instead of plain substring.
+- `requireBio` option to require users to have a bio (default: `false`).
+
+### Changed
+
+- Verification and decline messages redesigned for better readability.
+- Error details are now logged via `console.error` in all `catch` blocks.
 
 ## [0.7.0] - 2026-08-27
 

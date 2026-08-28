@@ -1,6 +1,7 @@
 {
   "decline": {
     "noPhoto": "no profile photo",
+    "noBio": "no bio",
     "blacklist": "blacklisted keyword is detected",
     "message": "<a href=\"tg://user?id={{userId}}\">{{- name}}</a>'s join request was declined\nReason: {{- reason}}"
   },

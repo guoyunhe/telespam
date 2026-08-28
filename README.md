@@ -38,6 +38,7 @@ Create a `~/.config/telespam.json` file in the working directory:
   "language": "en",
   "apiKey": "123456:ABC-DEF",
   "requireProfilePhoto": false,
+  "requireBio": false,
   "autoApprove": false,
   "keywordBlacklist": ["spam", "广告"],
   "verification": null
@@ -49,6 +50,7 @@ Create a `~/.config/telespam.json` file in the working directory:
 | `language`            | `"en"` \| `"zh"`                 | `"en"`       | Language for bot messages                                                                            |
 | `apiKey`              | `string`                         | _(required)_ | Bot API key from [@BotFather](https://t.me/botfather)                                                |
 | `requireProfilePhoto` | `boolean`                        | `false`      | Require users to have a profile photo                                                                |
+| `requireBio`          | `boolean`                        | `false`      | Require users to have a bio                                                                          |
 | `autoApprove`         | `boolean`                        | `false`      | Auto-approve requests that pass all rules                                                            |
 | `keywordBlacklist`    | `string[]`                       | `[]`         | Blacklisted keywords in names & bio (case-insensitive). Wrap with `/` for regex (e.g. `/^spam\d+$/`) |
 | `verification`        | `object` \| `object[]` \| `null` | `null`       | Verification question(s) sent after approval                                                         |

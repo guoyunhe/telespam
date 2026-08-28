@@ -19,6 +19,8 @@ export interface TelespamOptions {
   language?: Language;
   /** Require users to have a profile photo (default: false) */
   requireProfilePhoto?: boolean;
+  /** Require users to have a bio (default: false) */
+  requireBio?: boolean;
   /** Whether to auto-approve join requests that pass all rules (default: false) */
   autoApprove?: boolean;
   /**
@@ -71,6 +73,7 @@ export class Telespam {
   #t: TFunction;
   #botName: string;
   #requireProfilePhoto: boolean;
+  #requireBio: boolean;
   #autoApprove: boolean;
   #keywordBlacklist: (RegExp | string)[];
   #approvedUsers = new Map<number, Set<number>>();
@@ -107,6 +110,7 @@ export class Telespam {
     this.#t = i18n.t.bind(i18n);
 
     this.#requireProfilePhoto = options.requireProfilePhoto ?? false;
+    this.#requireBio = options.requireBio ?? false;
     this.#autoApprove = options.autoApprove ?? false;
     this.#keywordBlacklist = options.keywordBlacklist ?? [];
     this.#verification = normalizeVerification(options.verification);
@@ -197,6 +201,11 @@ export class Telespam {
 
     if (this.#requireProfilePhoto && !(await this.#hasProfilePhoto(userId))) {
       await this.#decline(chatId, userId, userName, chatName, this.#t('decline.noPhoto'));
+      return;
+    }
+
+    if (this.#requireBio && !(await this.#hasBio(userId))) {
+      await this.#decline(chatId, userId, userName, chatName, this.#t('decline.noBio'));
       return;
     }
 
@@ -450,6 +459,16 @@ export class Telespam {
     try {
       const { total_count } = await this.#bot.api.getUserProfilePhotos(userId);
       return total_count > 0;
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
+  }
+
+  async #hasBio(userId: number): Promise<boolean> {
+    try {
+      const chat = await this.#bot.api.getChat(userId);
+      return 'bio' in chat && !!chat.bio;
     } catch (e) {
       console.error(e);
       return false;
