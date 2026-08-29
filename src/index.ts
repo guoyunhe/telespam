@@ -200,11 +200,13 @@ export class Telespam {
     }
 
     if (this.#requireProfilePhoto && !(await this.#hasProfilePhoto(userId))) {
+      this.#log(`No profile photo`, chatName, userName);
       await this.#decline(chatId, userId, userName, chatName, this.#t('decline.noPhoto'));
       return;
     }
 
     if (this.#requireBio && !(await this.#hasBio(userId))) {
+      this.#log(`No bio`, chatName, userName);
       await this.#decline(chatId, userId, userName, chatName, this.#t('decline.noBio'));
       return;
     }
