@@ -3,7 +3,7 @@
     "noPhoto": "无头像",
     "noBio": "无简介",
     "blacklist": "检测到黑名单关键字",
-    "message": "<a href=\"tg://user?id={{userId}}\">{{- name}}</a> 的加群请求被拒绝\n原因: {{- reason}}"
+    "message": "🚫 <a href=\"tg://user?id={{userId}}\">{{- name}}</a> 的加群请求被拒绝\n原因: {{- reason}}"
   },
   "verification": {
     "message": "⏳ <a href=\"tg://user?id={{userId}}\">{{- userName}}</a>，请在 {{seconds}} 秒内回答问题。✗ 回答错误或超时将被移出群组。\n\n<b>{{- question}}</b>"

@@ -3,7 +3,7 @@
     "noPhoto": "no profile photo",
     "noBio": "no bio",
     "blacklist": "blacklisted keyword is detected",
-    "message": "<a href=\"tg://user?id={{userId}}\">{{- name}}</a>'s join request was declined\nReason: {{- reason}}"
+    "message": "🚫 <a href=\"tg://user?id={{userId}}\">{{- name}}</a>'s join request was declined\nReason: {{- reason}}"
   },
   "verification": {
     "message": "⏳ <a href=\"tg://user?id={{userId}}\">{{- userName}}</a>, you have {{seconds}} seconds to answer. ✗ Wrong answer or timeout → kicked.\n\n<b>{{- question}}</b>"
