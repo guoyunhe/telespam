@@ -1,4 +1,4 @@
-import { existsSync, globSync, readFileSync } from 'node:fs';
+import { globSync, readFileSync } from 'node:fs';
 
 import type { TelespamOptions } from './index.js';
 
