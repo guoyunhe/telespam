@@ -9,12 +9,9 @@ export function loadConfig(): TelespamOptions[] {
   const configs: TelespamOptions[] = [];
 
   for (const path of paths) {
-    if (!existsSync(path)) continue;
     try {
-      const raw = JSON.parse(readFileSync(path, 'utf-8'));
-      // Support both single config and array of configs
-      const parsed = Array.isArray(raw) ? raw : [raw];
-      configs.push(...parsed);
+      const config = JSON.parse(readFileSync(path, 'utf-8'));
+      configs.push(config);
     } catch {
       console.error(`Warning: invalid JSON in ${path}`);
     }
