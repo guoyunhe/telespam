@@ -1,13 +1,12 @@
 import { execSync } from 'node:child_process';
 import { existsSync, unlinkSync, writeFileSync } from 'node:fs';
-import { homedir } from 'node:os';
 import { join } from 'node:path';
 
 const SERVICE_NAME = 'telespam';
-const SYSTEMD_DIR = join(homedir(), '.config', 'systemd', 'user');
+const SYSTEMD_DIR = '/etc/systemd/system';
 const SERVICE_PATH = join(SYSTEMD_DIR, `${SERVICE_NAME}.service`);
 
-function generateServiceFile(workDir: string): string {
+function generateServiceFile(): string {
   return `[Unit]
 Description=Telespam anti-spam bot for Telegram
 After=network-online.target
@@ -16,49 +15,40 @@ Wants=network-online.target
 [Service]
 Type=simple
 ExecStart=${process.execPath} ${process.argv[1]}
-WorkingDirectory=${workDir}
-Restart=on-failure
+Restart=always
 RestartSec=5
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target
 `;
 }
 
 function systemctl(args: string): void {
   try {
-    execSync(`systemctl --user ${args}`, { stdio: 'inherit' });
+    execSync(`systemctl ${args}`, { stdio: 'inherit' });
   } catch {
     process.exit(1);
   }
 }
 
 export function install(): void {
-  const configPath = join(homedir(), '.config', 'telespam.json');
-
-  if (!existsSync(configPath)) {
-    console.error(`No telespam.json found at ${configPath}`);
-    console.error('Create ~/.config/telespam.json first, then run "telespam install" again.');
+  // 写入系统级服务配置文件
+  const serviceContent = generateServiceFile();
+  try {
+    writeFileSync(SERVICE_PATH, serviceContent, 'utf-8');
+    console.log(`✓ Service file written: ${SERVICE_PATH}`);
+  } catch (err) {
+    console.error(
+      `Failed to write service file to ${SERVICE_PATH}. Make sure to run with elevated privileges (e.g., sudo).`,
+    );
     process.exit(1);
   }
 
-  // Create systemd user directory if needed
-  execSync(`mkdir -p "${SYSTEMD_DIR}"`);
-
-  // Write service file
-  const serviceContent = generateServiceFile(homedir());
-  writeFileSync(SERVICE_PATH, serviceContent, 'utf-8');
-  console.log(`✓ Service file written: ${SERVICE_PATH}`);
-
   // Reload, enable, start
   systemctl('daemon-reload');
-  systemctl(`enable ${SERVICE_NAME}`);
-  systemctl(`start ${SERVICE_NAME}`);
+  systemctl(`enable --now ${SERVICE_NAME}`);
 
   console.log(`✓ Telespam systemd service installed and started`);
-  console.log(`  Config: ${configPath}`);
-  console.log(`  Status: systemctl --user status ${SERVICE_NAME}`);
-  console.log(`  Logs:   journalctl --user -u ${SERVICE_NAME} -f`);
 }
 
 export function uninstall(): void {
@@ -67,9 +57,15 @@ export function uninstall(): void {
     return;
   }
 
-  systemctl(`stop ${SERVICE_NAME}`);
-  systemctl(`disable ${SERVICE_NAME}`);
-  unlinkSync(SERVICE_PATH);
+  systemctl(`disable --now ${SERVICE_NAME}`);
+
+  try {
+    unlinkSync(SERVICE_PATH);
+  } catch (err) {
+    console.error(`Failed to delete service file at ${SERVICE_PATH}. Make sure to run with sudo.`);
+    process.exit(1);
+  }
+
   systemctl('daemon-reload');
 
   console.log('✓ Telespam systemd service uninstalled');
@@ -86,7 +82,7 @@ export function restart(): void {
 
 export function logs(): void {
   try {
-    execSync(`journalctl --user -u ${SERVICE_NAME} -f`, { stdio: 'inherit' });
+    execSync(`journalctl -u ${SERVICE_NAME} -f`, { stdio: 'inherit' });
   } catch {
     process.exit(1);
   }

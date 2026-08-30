@@ -31,7 +31,7 @@ sudo npm i -g telespam
 
 ## 配置
 
-创建 `~/.config/telespam.json` 配置文件：
+创建 `/etc/telespam/your-telegram-bot.json` 配置文件，格式如下：
 
 ```json
 {
@@ -131,10 +131,6 @@ sudo npm i -g telespam
   }
 ]
 ```
-
-## 配置文件优先级
-
-`cwd/telespam.json` 优先于 `~/.config/telespam.json`，不会合并两个文件。
 
 ## Systemd 服务
 

@@ -31,7 +31,7 @@ sudo npm i -g telespam
 
 ## Configuration
 
-Create a `~/.config/telespam.json` file in the working directory:
+Create a `/etc/telespam/your-telegram-bot.json` file with the following structure:
 
 ```json
 {
@@ -131,10 +131,6 @@ To run multiple bots with a single config file, use a JSON array. Each bot usern
   }
 ]
 ```
-
-## Config File Priority
-
-`cwd/telespam.json` takes precedence over `~/.config/telespam.json`. The two files are not merged.
 
 ## Systemd Service
 

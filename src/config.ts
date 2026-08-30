@@ -1,30 +1,29 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { homedir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { existsSync, globSync, readFileSync } from 'node:fs';
 
 import type { TelespamOptions } from './index.js';
 
-/** Resolve config paths, ordered by priority (first wins). */
-export function resolveConfigPaths(): string[] {
-  return [resolve('telespam.json'), join(homedir(), '.config', 'telespam.json')];
-}
-
-/** Load the first valid config file by priority: cwd/telespam.json > ~/.config/telespam.json. */
+/** Load all valid config files from /etc/telespam/*.json. */
 export function loadConfig(): TelespamOptions[] {
-  const paths = resolveConfigPaths();
+  const paths = globSync('/etc/telespam/*.json');
+
+  const configs: TelespamOptions[] = [];
 
   for (const path of paths) {
     if (!existsSync(path)) continue;
     try {
       const raw = JSON.parse(readFileSync(path, 'utf-8'));
       // Support both single config and array of configs
-      return Array.isArray(raw) ? raw : [raw];
+      const parsed = Array.isArray(raw) ? raw : [raw];
+      configs.push(...parsed);
     } catch {
       console.error(`Warning: invalid JSON in ${path}`);
     }
   }
 
+  if (configs.length > 0) {
+    return configs;
+  }
+
   console.error('No valid telespam.json found');
-  console.error(`  Expected at: ${paths.join(' or ')}`);
   process.exit(1);
 }
