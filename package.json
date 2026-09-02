@@ -1,6 +1,6 @@
 {
   "name": "telespam",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Self-hosted anti-spam bot for Telegram groups — keyword filtering, profile photo check, multi-step verification & auto-approval",
   "keywords": [
     "anti-spam",
