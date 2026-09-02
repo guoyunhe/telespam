@@ -273,6 +273,9 @@ export class Telespam {
     });
 
     try {
+      if (questionIndex === 0) {
+        await this.#setMessagePermission(chatId, userId, false);
+      }
       const msg = await this.#bot.api.sendMessage(chatId, text, {
         reply_markup: keyboard,
         parse_mode: 'HTML',
@@ -291,6 +294,9 @@ export class Telespam {
         correctAnswerIndex,
       });
     } catch (e) {
+      if (questionIndex === 0) {
+        await this.#setMessagePermission(chatId, userId, true);
+      }
       this.#logError(`Failed to send verification`, chatName, userName);
       console.error(e);
     }
@@ -352,6 +358,7 @@ export class Telespam {
         );
       } else {
         // All questions answered correctly
+        await this.#setMessagePermission(pending.chatId, targetUserId, true);
         this.#statsManager.record(pending.chatId, 'approved');
         this.#log('Verification passed', pending.chatName, pending.userName);
       }
@@ -384,6 +391,33 @@ export class Telespam {
     if (pending) {
       clearTimeout(pending.timer);
       this.#pendingVerifications.delete(key);
+    }
+  }
+
+  async #setMessagePermission(
+    chatId: number,
+    userId: number,
+    canSendMessages: boolean,
+  ): Promise<void> {
+    try {
+      await this.#bot.api.restrictChatMember(chatId, userId, {
+        can_send_messages: canSendMessages,
+        can_send_audios: canSendMessages,
+        can_send_documents: canSendMessages,
+        can_send_photos: canSendMessages,
+        can_send_videos: canSendMessages,
+        can_send_video_notes: canSendMessages,
+        can_send_voice_notes: canSendMessages,
+        can_send_polls: canSendMessages,
+        can_send_other_messages: canSendMessages,
+        can_add_web_page_previews: canSendMessages,
+      });
+    } catch (e) {
+      this.#logError(
+        `Failed to update message permissions for user ${userId}`,
+        this.#chatNames.get(chatId),
+      );
+      console.error(e);
     }
   }
 
