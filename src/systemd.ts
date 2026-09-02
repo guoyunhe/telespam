@@ -14,7 +14,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart=${process.execPath} ${process.argv[1]}
+ExecStart=${process.argv[1]}
 Restart=always
 RestartSec=5
 
