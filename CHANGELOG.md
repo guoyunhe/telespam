@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.0] - 2026-09-10
+
+### Added
+
+- Configurable columns for verification question options, defaulting to two columns.
+
 ## [0.8.0] - 2026-08-28
 
 ### Added
