@@ -25,7 +25,7 @@ test('Telespam constructor accepts blacklist', () => {
 test('Telespam constructor accepts verification', () => {
   const bot = new Telespam({
     apiKey: '123456:ABC-DEF',
-    verification: { question: '1+1=?', options: ['1', '2', '3'], answer: 1 },
+    verification: { question: '1+1=?', options: ['1', '2', '3'], answer: 1, columns: 3 },
   });
   expect(bot).toBeInstanceOf(Telespam);
 });

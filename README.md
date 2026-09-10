@@ -98,6 +98,7 @@ Users must answer all questions correctly in order. A wrong answer at any step r
 | `question` | `string`   | _(required)_ | The question text                         |
 | `options`  | `string[]` | _(required)_ | Answer options as inline buttons          |
 | `answer`   | `number`   | _(required)_ | 0-based index of the correct option       |
+| `columns`  | `number`   | `2`          | Number of options displayed per row       |
 | `timeout`  | `number`   | `180`        | Seconds before kicking unresponsive users |
 
 #### Multi-instance

@@ -44,6 +44,8 @@ export interface VerificationConfig {
   options: string[];
   /** Index of the correct answer (0-based) */
   answer: number;
+  /** Number of columns used to display answer options (default: 2) */
+  columns?: number;
   /** Timeout in seconds before kicking the user (default: 180) */
   timeout?: number;
 }
@@ -252,7 +254,15 @@ export class Telespam {
     }
 
     const config = this.#verification[questionIndex];
-    const { question, options: origOptions, timeout: timeoutSec = 180 } = config;
+    const {
+      question,
+      options: origOptions,
+      columns: configuredColumns = 2,
+      timeout: timeoutSec = 180,
+    } = config;
+    const columns = Number.isFinite(configuredColumns)
+      ? Math.max(1, Math.floor(configuredColumns))
+      : 2;
 
     // Shuffle options and track the correct answer's new position
     const indices = shuffle(origOptions.map((_, i) => i));
@@ -262,7 +272,8 @@ export class Telespam {
     const keyboard = new InlineKeyboard();
 
     for (let i = 0; i < options.length; i++) {
-      keyboard.text(options[i], `v|${userId}|${i}`).row();
+      keyboard.text(options[i], `v|${userId}|${i}`);
+      if ((i + 1) % columns === 0) keyboard.row();
     }
 
     const text = this.#t('verification.message', {

@@ -98,6 +98,7 @@ sudo npm i -g telespam
 | `question` | `string`   | _(必填)_ | 问题文本                    |
 | `options`  | `string[]` | _(必填)_ | 内联按钮选项                |
 | `answer`   | `number`   | _(必填)_ | 正确选项的索引（从 0 开始） |
+| `columns`  | `number`   | `2`      | 每行显示的选项数量          |
 | `timeout`  | `number`   | `180`    | 超时踢出用户的秒数          |
 
 #### 多实例
